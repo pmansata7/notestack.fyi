@@ -4,15 +4,32 @@ import {
   deleteTranscript,
   getSettings,
   listTranscripts,
+  saveSettings,
+  searchTranscripts,
 } from "./api";
+import { AskMeetingsPanel } from "./components/AskMeetingsPanel";
+import { AssistantHub } from "./components/AssistantHub";
+import { FloatingPane } from "./components/FloatingPane";
 import { OnboardingWizard } from "./components/OnboardingWizard";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { TasksPanel } from "./components/TasksPanel";
+import { TrashPanel } from "./components/TrashPanel";
 import { TranscriptDetail } from "./components/TranscriptDetail";
 import { TranscriptList } from "./components/TranscriptList";
+import { useDictation } from "./hooks/useDictation";
+import { useMeetingReminders } from "./hooks/useMeetingReminders";
 import { useRecording } from "./hooks/useRecording";
+import { normalizeSettings } from "./lib/settings";
 import type { AppSettings, Transcript } from "./types";
 
-type View = "main" | "settings" | "onboarding";
+type View =
+  | "main"
+  | "assistant"
+  | "ask"
+  | "tasks"
+  | "trash"
+  | "settings"
+  | "onboarding";
 
 function formatElapsed(ms: number) {
   const s = Math.floor(ms / 1000);
@@ -26,14 +43,20 @@ function App() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [peekId, setPeekId] = useState<string | null>(null);
+  const [reminder, setReminder] = useState<string | null>(null);
+  const [paneHidden, setPaneHidden] = useState(false);
 
   const refresh = useCallback(async () => {
-    const list = await listTranscripts();
+    const list = search.trim()
+      ? await searchTranscripts(search.trim())
+      : await listTranscripts(false);
     setTranscripts(list);
     if (selectedId && !list.find((t) => t.id === selectedId)) {
       setSelectedId(list[0]?.id ?? null);
     }
-  }, [selectedId]);
+  }, [selectedId, search]);
 
   const onSaved = useCallback(
     (t: Transcript) => {
@@ -43,16 +66,43 @@ function App() {
     [refresh],
   );
 
-  const recording = useRecording(onSaved);
+  const effectiveSettings = settings ?? normalizeSettings({
+    ollama_base_url: "",
+    default_model: "",
+    onboarding_complete: false,
+    auto_enhance_on_stop: true,
+    auto_instant_summary: true,
+    delete_audio_after_transcribe: false,
+    floating_pane_visible: true,
+    meeting_reminder_minutes: 1,
+    default_template_id: "general",
+    calendar_events_json: "[]",
+    dictation_enabled: false,
+  });
+
+  const recording = useRecording(effectiveSettings, onSaved);
+
+  useDictation(effectiveSettings.dictation_enabled);
+
+  useMeetingReminders(effectiveSettings, (title) => {
+    setReminder(`Starting soon: ${title}`);
+  });
 
   useEffect(() => {
     void (async () => {
-      const s = await getSettings();
+      const s = normalizeSettings(await getSettings());
       setSettings(s);
       if (!s.onboarding_complete) setView("onboarding");
       await refresh();
     })();
-  }, [refresh]);
+  }, []);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      void refresh();
+    }, 300);
+    return () => window.clearTimeout(t);
+  }, [search, refresh]);
 
   const selected =
     transcripts.find((t) => t.id === selectedId) ?? null;
@@ -61,6 +111,12 @@ function App() {
     await deleteTranscript(id);
     if (selectedId === id) setSelectedId(null);
     await refresh();
+  };
+
+  const persistSettings = async (s: AppSettings) => {
+    const next = normalizeSettings(s);
+    await saveSettings(next);
+    setSettings(next);
   };
 
   if (!settings) {
@@ -73,7 +129,7 @@ function App() {
         <OnboardingWizard
           settings={settings}
           onComplete={(s) => {
-            setSettings(s);
+            setSettings(normalizeSettings(s));
             setView("main");
           }}
         />
@@ -81,36 +137,74 @@ function App() {
     );
   }
 
+  const showPane =
+    recording.recording &&
+    settings.floating_pane_visible &&
+    !paneHidden;
+
   return (
     <div className="app">
       <header className="topbar">
         <div className="brand">
           <span className="logo" aria-hidden>●</span>
           <span>Record Plus</span>
+          {recording.recording && (
+            <span className="recording-pill">Recording {formatElapsed(recording.elapsedMs)}</span>
+          )}
         </div>
         <nav>
-          <button
-            type="button"
-            className={view === "main" ? "active" : "ghost"}
-            onClick={() => setView("main")}
-          >
-            Recordings
-          </button>
-          <button
-            type="button"
-            className={view === "settings" ? "active" : "ghost"}
-            onClick={() => setView("settings")}
-          >
-            Settings
-          </button>
+          {(
+            [
+              ["main", "Recordings"],
+              ["assistant", "Assistant"],
+              ["ask", "Ask"],
+              ["tasks", "Tasks"],
+              ["trash", "Trash"],
+              ["settings", "Settings"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              className={view === id ? "active" : "ghost"}
+              onClick={() => setView(id)}
+            >
+              {label}
+            </button>
+          ))}
         </nav>
       </header>
+
+      {reminder && (
+        <div className="reminder-banner">
+          {reminder}
+          <button type="button" className="ghost small" onClick={() => setReminder(null)}>
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {view === "settings" ? (
         <SettingsPanel
           settings={settings}
-          onSettingsChange={setSettings}
+          onSettingsChange={(s) => void persistSettings(s)}
           onRerunOnboarding={() => setView("onboarding")}
+        />
+      ) : view === "ask" ? (
+        <AskMeetingsPanel settings={settings} />
+      ) : view === "tasks" ? (
+        <TasksPanel transcripts={transcripts} />
+      ) : view === "trash" ? (
+        <TrashPanel onRestored={() => void refresh()} />
+      ) : view === "assistant" ? (
+        <AssistantHub
+          settings={settings}
+          transcripts={transcripts}
+          onSaveSettings={(s) => void persistSettings(s)}
+          onStartRecordingForEvent={(title) => {
+            setView("main");
+            void recording.start(title);
+          }}
         />
       ) : (
         <main className="layout">
@@ -120,9 +214,12 @@ function App() {
                 <button
                   type="button"
                   className="record-btn"
-                  onClick={() => void recording.start()}
+                  onClick={() => {
+                    setPaneHidden(false);
+                    void recording.start();
+                  }}
                 >
-                  Record
+                  Take notes (no bot)
                 </button>
               ) : (
                 <button
@@ -134,19 +231,6 @@ function App() {
                 </button>
               )}
             </div>
-            {recording.recording && (
-              <div className="live-panel">
-                <h3>Live transcript</h3>
-                <textarea
-                  rows={6}
-                  value={recording.liveText}
-                  onChange={(e) => recording.setLiveText(e.target.value)}
-                />
-                <p className="muted small">
-                  Uses browser speech recognition when available; edit freely during recording.
-                </p>
-              </div>
-            )}
             {recording.error && (
               <p className="error">{recording.error}</p>
             )}
@@ -155,12 +239,17 @@ function App() {
               selectedId={selectedId}
               onSelect={setSelectedId}
               onDelete={(id) => void handleDelete(id)}
+              search={search}
+              onSearchChange={setSearch}
             />
           </aside>
           <section className="content">
             <TranscriptDetail
               transcript={selected}
               settings={settings}
+              allTranscripts={transcripts}
+              peekTranscriptId={peekId}
+              onPeek={setPeekId}
               onUpdated={(t) => {
                 setTranscripts((prev) =>
                   prev.map((x) => (x.id === t.id ? t : x)),
@@ -170,6 +259,17 @@ function App() {
           </section>
         </main>
       )}
+
+      <FloatingPane
+        visible={showPane}
+        elapsedMs={recording.elapsedMs}
+        liveTranscript={recording.liveText}
+        manualNotes={recording.manualNotes}
+        onManualNotesChange={recording.setManualNotes}
+        onLiveTranscriptChange={recording.setLiveText}
+        settings={settings}
+        onClose={() => setPaneHidden(true)}
+      />
     </div>
   );
 }

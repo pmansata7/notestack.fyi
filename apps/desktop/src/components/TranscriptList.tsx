@@ -5,6 +5,8 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  search: string;
+  onSearchChange: (q: string) => void;
 }
 
 function formatWhen(iso: string) {
@@ -15,34 +17,60 @@ function formatWhen(iso: string) {
   }
 }
 
-export function TranscriptList({ items, selectedId, onSelect, onDelete }: Props) {
-  if (items.length === 0) {
-    return (
-      <div className="empty">
-        <p>No recordings yet.</p>
-        <p className="muted">Press Record to capture audio and transcript text.</p>
-      </div>
-    );
-  }
+function formatDuration(ms: number | null) {
+  if (!ms) return "";
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r.toString().padStart(2, "0")}`;
+}
 
+export function TranscriptList({
+  items,
+  selectedId,
+  onSelect,
+  onDelete,
+  search,
+  onSearchChange,
+}: Props) {
   return (
-    <ul className="transcript-list">
-      {items.map((t) => (
-        <li key={t.id} className={t.id === selectedId ? "selected" : ""}>
-          <button type="button" className="list-item" onClick={() => onSelect(t.id)}>
-            <span className="title">{t.title}</span>
-            <span className="meta">{formatWhen(t.created_at)}</span>
-          </button>
-          <button
-            type="button"
-            className="icon danger"
-            title="Delete"
-            onClick={() => onDelete(t.id)}
-          >
-            ×
-          </button>
-        </li>
-      ))}
-    </ul>
+    <>
+      <label className="search-box">
+        Search meetings
+        <input
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Titles, transcripts, notes…"
+        />
+      </label>
+      {items.length === 0 ? (
+        <div className="empty">
+          <p>No recordings yet.</p>
+          <p className="muted">Press Record to capture audio and transcript text.</p>
+        </div>
+      ) : (
+        <ul className="transcript-list">
+          {items.map((t) => (
+            <li key={t.id} className={t.id === selectedId ? "selected" : ""}>
+              <button type="button" className="list-item" onClick={() => onSelect(t.id)}>
+                <span className="title">{t.title}</span>
+                <span className="meta">
+                  {formatWhen(t.created_at)}
+                  {t.duration_ms ? ` · ${formatDuration(t.duration_ms)}` : ""}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="icon danger"
+                title="Move to trash"
+                onClick={() => onDelete(t.id)}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }

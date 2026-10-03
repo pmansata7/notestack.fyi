@@ -21,8 +21,14 @@ pub struct Transcript {
     pub updated_at: String,
     pub transcript_text: String,
     pub notes_text: String,
+    pub manual_notes: String,
+    pub ai_additions: String,
+    pub instant_summary: String,
+    pub tasks_json: String,
+    pub template_id: String,
     pub audio_path: Option<String>,
     pub duration_ms: Option<i64>,
+    pub deleted_at: Option<String>,
 }
 
 pub struct Database {
@@ -54,6 +60,7 @@ impl Database {
             );
             ",
         )?;
+        migrate_transcripts_schema(&conn)?;
         Ok(Self {
             conn: Mutex::new(conn),
             data_dir,
@@ -64,24 +71,19 @@ impl Database {
         self.data_dir.join("recordings")
     }
 
-    pub fn list_transcripts(&self) -> Result<Vec<Transcript>, DbError> {
+    pub fn list_transcripts(&self, include_deleted: bool) -> Result<Vec<Transcript>, DbError> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare(
-            "SELECT id, title, created_at, updated_at, transcript_text, notes_text, audio_path, duration_ms
-             FROM transcripts ORDER BY created_at DESC",
-        )?;
-        let rows = stmt.query_map([], |row| {
-            Ok(Transcript {
-                id: row.get(0)?,
-                title: row.get(1)?,
-                created_at: row.get(2)?,
-                updated_at: row.get(3)?,
-                transcript_text: row.get(4)?,
-                notes_text: row.get(5)?,
-                audio_path: row.get(6)?,
-                duration_ms: row.get(7)?,
-            })
-        })?;
+        let sql = if include_deleted {
+            "SELECT id, title, created_at, updated_at, transcript_text, notes_text, manual_notes,
+                    ai_additions, instant_summary, tasks_json, template_id, audio_path, duration_ms, deleted_at
+             FROM transcripts ORDER BY created_at DESC"
+        } else {
+            "SELECT id, title, created_at, updated_at, transcript_text, notes_text, manual_notes,
+                    ai_additions, instant_summary, tasks_json, template_id, audio_path, duration_ms, deleted_at
+             FROM transcripts WHERE deleted_at IS NULL ORDER BY created_at DESC"
+        };
+        let mut stmt = conn.prepare(sql)?;
+        let rows = stmt.query_map([], |row| row_to_transcript(row))?;
         let mut out = Vec::new();
         for r in rows {
             out.push(r?);
@@ -92,21 +94,13 @@ impl Database {
     pub fn get_transcript(&self, id: &str) -> Result<Option<Transcript>, DbError> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
-            "SELECT id, title, created_at, updated_at, transcript_text, notes_text, audio_path, duration_ms
+            "SELECT id, title, created_at, updated_at, transcript_text, notes_text, manual_notes,
+                    ai_additions, instant_summary, tasks_json, template_id, audio_path, duration_ms, deleted_at
              FROM transcripts WHERE id = ?1",
         )?;
         let mut rows = stmt.query(params![id])?;
         if let Some(row) = rows.next()? {
-            return Ok(Some(Transcript {
-                id: row.get(0)?,
-                title: row.get(1)?,
-                created_at: row.get(2)?,
-                updated_at: row.get(3)?,
-                transcript_text: row.get(4)?,
-                notes_text: row.get(5)?,
-                audio_path: row.get(6)?,
-                duration_ms: row.get(7)?,
-            }));
+            return Ok(Some(row_to_transcript(row)?));
         }
         Ok(None)
     }
@@ -114,8 +108,9 @@ impl Database {
     pub fn insert_transcript(&self, transcript: &Transcript) -> Result<(), DbError> {
         let conn = self.conn.lock().unwrap();
         conn.execute(
-            "INSERT INTO transcripts (id, title, created_at, updated_at, transcript_text, notes_text, audio_path, duration_ms)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            "INSERT INTO transcripts (id, title, created_at, updated_at, transcript_text, notes_text,
+             manual_notes, ai_additions, instant_summary, tasks_json, template_id, audio_path, duration_ms, deleted_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
             params![
                 transcript.id,
                 transcript.title,
@@ -123,8 +118,14 @@ impl Database {
                 transcript.updated_at,
                 transcript.transcript_text,
                 transcript.notes_text,
+                transcript.manual_notes,
+                transcript.ai_additions,
+                transcript.instant_summary,
+                transcript.tasks_json,
+                transcript.template_id,
                 transcript.audio_path,
                 transcript.duration_ms,
+                transcript.deleted_at,
             ],
         )?;
         Ok(())
@@ -134,24 +135,74 @@ impl Database {
         let conn = self.conn.lock().unwrap();
         conn.execute(
             "UPDATE transcripts SET title = ?2, updated_at = ?3, transcript_text = ?4, notes_text = ?5,
-             audio_path = ?6, duration_ms = ?7 WHERE id = ?1",
+             manual_notes = ?6, ai_additions = ?7, instant_summary = ?8, tasks_json = ?9, template_id = ?10,
+             audio_path = ?11, duration_ms = ?12, deleted_at = ?13 WHERE id = ?1",
             params![
                 transcript.id,
                 transcript.title,
                 transcript.updated_at,
                 transcript.transcript_text,
                 transcript.notes_text,
+                transcript.manual_notes,
+                transcript.ai_additions,
+                transcript.instant_summary,
+                transcript.tasks_json,
+                transcript.template_id,
                 transcript.audio_path,
                 transcript.duration_ms,
+                transcript.deleted_at,
             ],
         )?;
         Ok(())
     }
 
-    pub fn delete_transcript(&self, id: &str) -> Result<(), DbError> {
+    pub fn soft_delete_transcript(&self, id: &str) -> Result<(), DbError> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "UPDATE transcripts SET deleted_at = ?2, updated_at = ?2 WHERE id = ?1",
+            params![id, now_iso()],
+        )?;
+        Ok(())
+    }
+
+    pub fn restore_transcript(&self, id: &str) -> Result<(), DbError> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "UPDATE transcripts SET deleted_at = NULL, updated_at = ?2 WHERE id = ?1",
+            params![id, now_iso()],
+        )?;
+        Ok(())
+    }
+
+    pub fn purge_transcript(&self, id: &str) -> Result<(), DbError> {
         let conn = self.conn.lock().unwrap();
         conn.execute("DELETE FROM transcripts WHERE id = ?1", params![id])?;
         Ok(())
+    }
+
+    pub fn search_transcripts(&self, query: &str) -> Result<Vec<Transcript>, DbError> {
+        let q = query.trim();
+        if q.is_empty() {
+            return self.list_transcripts(false);
+        }
+        let like = format!("%{}%", q.replace('%', ""));
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, title, created_at, updated_at, transcript_text, notes_text, manual_notes,
+                    ai_additions, instant_summary, tasks_json, template_id, audio_path, duration_ms, deleted_at
+             FROM transcripts
+             WHERE deleted_at IS NULL AND (
+               title LIKE ?1 OR transcript_text LIKE ?1 OR notes_text LIKE ?1
+               OR manual_notes LIKE ?1 OR ai_additions LIKE ?1 OR instant_summary LIKE ?1
+             )
+             ORDER BY created_at DESC",
+        )?;
+        let rows = stmt.query_map(params![like], |row| row_to_transcript(row))?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
     }
 
     pub fn get_setting(&self, key: &str) -> Result<Option<String>, DbError> {
@@ -173,6 +224,55 @@ impl Database {
         )?;
         Ok(())
     }
+}
+
+fn migrate_transcripts_schema(conn: &Connection) -> Result<(), DbError> {
+    let columns: Vec<String> = conn
+        .prepare("PRAGMA table_info(transcripts)")?
+        .query_map([], |row| row.get::<_, String>(1))?
+        .filter_map(|r| r.ok())
+        .collect();
+    let mut add = |name: &str, ddl: &str| -> Result<(), DbError> {
+        if !columns.iter().any(|c| c == name) {
+            conn.execute_batch(ddl)?;
+        }
+        Ok(())
+    };
+    add("manual_notes", "ALTER TABLE transcripts ADD COLUMN manual_notes TEXT NOT NULL DEFAULT '';")?;
+    add("ai_additions", "ALTER TABLE transcripts ADD COLUMN ai_additions TEXT NOT NULL DEFAULT '';")?;
+    add(
+        "instant_summary",
+        "ALTER TABLE transcripts ADD COLUMN instant_summary TEXT NOT NULL DEFAULT '';",
+    )?;
+    add(
+        "tasks_json",
+        "ALTER TABLE transcripts ADD COLUMN tasks_json TEXT NOT NULL DEFAULT '[]';",
+    )?;
+    add(
+        "template_id",
+        "ALTER TABLE transcripts ADD COLUMN template_id TEXT NOT NULL DEFAULT 'general';",
+    )?;
+    add("deleted_at", "ALTER TABLE transcripts ADD COLUMN deleted_at TEXT;")?;
+    Ok(())
+}
+
+fn row_to_transcript(row: &rusqlite::Row<'_>) -> Result<Transcript, rusqlite::Error> {
+    Ok(Transcript {
+        id: row.get(0)?,
+        title: row.get(1)?,
+        created_at: row.get(2)?,
+        updated_at: row.get(3)?,
+        transcript_text: row.get(4)?,
+        notes_text: row.get(5)?,
+        manual_notes: row.get(6)?,
+        ai_additions: row.get(7)?,
+        instant_summary: row.get(8)?,
+        tasks_json: row.get(9)?,
+        template_id: row.get(10)?,
+        audio_path: row.get(11)?,
+        duration_ms: row.get(12)?,
+        deleted_at: row.get(13)?,
+    })
 }
 
 pub fn now_iso() -> String {

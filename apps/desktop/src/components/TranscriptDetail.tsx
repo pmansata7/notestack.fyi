@@ -1,25 +1,60 @@
-import { useEffect, useState } from "react";
-import { generateNotes, updateTranscript } from "../api";
-import type { AppSettings, Transcript } from "../types";
+import { useEffect, useMemo, useState } from "react";
+import {
+  enhanceNotes,
+  generateInstantSummary,
+  generateNotes,
+  updateTranscript,
+} from "../api";
+import { MEETING_TEMPLATES, type AppSettings, type MeetingTask, type Transcript } from "../types";
 
 interface Props {
   transcript: Transcript | null;
   settings: AppSettings;
   onUpdated: (t: Transcript) => void;
+  peekTranscriptId: string | null;
+  onPeek: (id: string | null) => void;
+  allTranscripts: Transcript[];
 }
 
-export function TranscriptDetail({ transcript, settings, onUpdated }: Props) {
+function parseTasks(json: string): MeetingTask[] {
+  try {
+    const raw = JSON.parse(json) as MeetingTask[];
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+export function TranscriptDetail({
+  transcript,
+  settings,
+  onUpdated,
+  peekTranscriptId,
+  onPeek,
+  allTranscripts,
+}: Props) {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [notes, setNotes] = useState("");
+  const [manual, setManual] = useState("");
+  const [aiAdditions, setAiAdditions] = useState("");
+  const [instant, setInstant] = useState("");
+  const [templateId, setTemplateId] = useState("general");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const peek = useMemo(
+    () => allTranscripts.find((t) => t.id === peekTranscriptId) ?? null,
+    [allTranscripts, peekTranscriptId],
+  );
 
   useEffect(() => {
     if (!transcript) return;
     setTitle(transcript.title);
     setText(transcript.transcript_text);
-    setNotes(transcript.notes_text);
+    setManual(transcript.manual_notes);
+    setAiAdditions(transcript.ai_additions);
+    setInstant(transcript.instant_summary);
+    setTemplateId(transcript.template_id || "general");
     setMessage(null);
   }, [transcript]);
 
@@ -31,6 +66,8 @@ export function TranscriptDetail({ transcript, settings, onUpdated }: Props) {
     );
   }
 
+  const tasks = parseTasks(transcript.tasks_json);
+
   const save = async () => {
     setBusy(true);
     try {
@@ -38,7 +75,10 @@ export function TranscriptDetail({ transcript, settings, onUpdated }: Props) {
         id: transcript.id,
         title,
         transcript_text: text,
-        notes_text: notes,
+        manual_notes: manual,
+        ai_additions: aiAdditions,
+        instant_summary: instant,
+        template_id: templateId,
       });
       onUpdated(t);
       setMessage("Saved.");
@@ -52,9 +92,8 @@ export function TranscriptDetail({ transcript, settings, onUpdated }: Props) {
     setMessage(null);
     try {
       const t = await generateNotes(transcript.id, settings.default_model);
-      setNotes(t.notes_text);
       onUpdated(t);
-      setMessage("Notes generated via Ollama.");
+      setMessage("Full meeting notes generated.");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
     } finally {
@@ -62,36 +101,165 @@ export function TranscriptDetail({ transcript, settings, onUpdated }: Props) {
     }
   };
 
+  const enhance = async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      await updateTranscript({
+        id: transcript.id,
+        manual_notes: manual,
+        transcript_text: text,
+        template_id: templateId,
+      });
+      const t = await enhanceNotes(transcript.id, settings.default_model);
+      setAiAdditions(t.ai_additions);
+      onUpdated(t);
+      setMessage("Notes enhanced — your text stays black, AI in gray below.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const instantSummary = async () => {
+    setBusy(true);
+    try {
+      const t = await generateInstantSummary(
+        transcript.id,
+        settings.default_model,
+      );
+      setInstant(t.instant_summary);
+      onUpdated(t);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const exportMarkdown = () => {
+    const md = `# ${title}\n\n## Instant summary\n${instant}\n\n## Your notes\n${manual}\n\n## AI additions\n${aiAdditions}\n\n## Transcript\n${text}\n`;
+    void navigator.clipboard.writeText(md);
+    setMessage("Copied markdown to clipboard.");
+  };
+
   return (
     <div className="detail">
+      {peek && peek.id !== transcript.id && (
+        <aside className="peek-panel">
+          <header>
+            <strong>Glance: {peek.title}</strong>
+            <button type="button" className="ghost small" onClick={() => onPeek(null)}>
+              Close
+            </button>
+          </header>
+          <p className="muted small">{peek.instant_summary || peek.notes_text.slice(0, 280)}</p>
+        </aside>
+      )}
+
+      <label>
+        Template
+        <select
+          value={templateId}
+          onChange={(e) => setTemplateId(e.target.value)}
+        >
+          {MEETING_TEMPLATES.map((t) => (
+            <option key={t.id} value={t.id}>{t.label}</option>
+          ))}
+        </select>
+      </label>
+
       <label>
         Title
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
       </label>
+
+      {instant && (
+        <section className="instant-summary">
+          <h3>Instant summary</h3>
+          <pre>{instant}</pre>
+        </section>
+      )}
+
+      <label>
+        Your notes during the meeting
+        <textarea
+          rows={6}
+          className="manual-notes"
+          value={manual}
+          onChange={(e) => setManual(e.target.value)}
+          placeholder="Rough bullets — enhance after the call."
+        />
+      </label>
+
+      {aiAdditions && (
+        <label>
+          AI enhancements
+          <textarea
+            rows={8}
+            className="ai-notes"
+            value={aiAdditions}
+            onChange={(e) => setAiAdditions(e.target.value)}
+            readOnly={false}
+          />
+        </label>
+      )}
+
       <label>
         Transcript
         <textarea
-          rows={12}
+          rows={10}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Live speech-to-text appears here when supported; you can edit or paste text anytime."
+          placeholder="Live speech-to-text appears here when supported."
         />
       </label>
-      <label>
-        Meeting notes
-        <textarea
-          rows={10}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Generate summaries from your transcript using your local Ollama model."
-        />
-      </label>
+
+      {tasks.length > 0 && (
+        <section className="inline-tasks">
+          <h3>Action items</h3>
+          <ul>
+            {tasks.map((task, i) => (
+              <li key={i}>{task.title}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="row">
         <button type="button" onClick={save} disabled={busy}>Save</button>
+        <button type="button" className="secondary" onClick={enhance} disabled={busy}>
+          Enhance notes
+        </button>
+        <button type="button" className="secondary" onClick={instantSummary} disabled={busy}>
+          Instant summary
+        </button>
         <button type="button" className="secondary" onClick={genNotes} disabled={busy}>
-          Generate notes (Ollama)
+          Full AI notes
+        </button>
+        <button type="button" className="ghost" onClick={exportMarkdown}>
+          Share (copy MD)
         </button>
       </div>
+
+      <div className="row">
+        <label className="inline">
+          Glance at another note while recording
+          <select
+            value={peekTranscriptId ?? ""}
+            onChange={(e) => onPeek(e.target.value || null)}
+          >
+            <option value="">None</option>
+            {allTranscripts
+              .filter((t) => t.id !== transcript.id)
+              .map((t) => (
+                <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+          </select>
+        </label>
+      </div>
+
       {transcript.audio_path && (
         <p className="muted mono">Audio: {transcript.audio_path}</p>
       )}
