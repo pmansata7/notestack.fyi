@@ -16,6 +16,7 @@ import { TasksPanel } from "./components/TasksPanel";
 import { TrashPanel } from "./components/TrashPanel";
 import { TranscriptDetail } from "./components/TranscriptDetail";
 import { TranscriptList } from "./components/TranscriptList";
+import { GeminiMark } from "./components/GeminiMark";
 import { useDictation } from "./hooks/useDictation";
 import { useMeetingReminders } from "./hooks/useMeetingReminders";
 import { useRecording } from "./hooks/useRecording";
@@ -146,8 +147,10 @@ function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <span className="logo" aria-hidden>●</span>
-          <span>Record Plus</span>
+          <GeminiMark size={28} />
+          <span>
+            Record <span className="brand-plus">Plus</span>
+          </span>
           {recording.recording && (
             <span className="recording-pill">Recording {formatElapsed(recording.elapsedMs)}</span>
           )}
@@ -209,6 +212,7 @@ function App() {
       ) : (
         <main className="layout">
           <aside className="sidebar">
+            <p className="sidebar-section-label">Recent</p>
             <div className="record-bar">
               {!recording.recording ? (
                 <button

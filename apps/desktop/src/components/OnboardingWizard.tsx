@@ -91,7 +91,9 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
   return (
     <div className="panel onboarding">
-      <h1>Welcome to Record Plus</h1>
+      <h1>
+        Welcome to Record <span className="gradient">Plus</span>
+      </h1>
       <p className="muted">
         Local-first meeting notes powered by Ollama on your Mac. Your recordings
         and transcripts stay in your app data folder.

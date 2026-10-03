@@ -1,18 +1,19 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --color-surface-950: #0c0f14;
-  --color-surface-900: #12161e;
-  --color-surface-800: #1a2030;
-  --color-surface-700: #252d3d;
-  --color-surface-600: #3d4a63;
-  --color-accent: #5eead4;
-  --color-accent-muted: #2dd4bf;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-trust: #86efac;
+  --font-sans: 'Google Sans', 'Roboto', ui-sans-serif, system-ui, sans-serif;
+  --color-gemini-bg: #ffffff;
+  --color-gemini-bg-soft: #f0f4f9;
+  --color-gemini-bg-muted: #e9eef6;
+  --color-gemini-surface: #ffffff;
+  --color-gemini-border: #dde3ea;
+  --color-gemini-blue: #0b57d0;
+  --color-gemini-blue-hover: #0842a0;
+  --color-gemini-blue-soft: #d3e3fd;
+  --color-gemini-text: #1f1f1f;
+  --color-gemini-text-secondary: #444746;
+  --color-gemini-text-muted: #5f6368;
+  --color-gemini-chip: #f0f4f9;
 }
 
 html {
@@ -22,8 +23,36 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--color-surface-950);
-  color: var(--color-text-primary);
+  background-color: var(--color-gemini-bg);
+  color: var(--color-gemini-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+.gemini-gradient-text {
+  background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gemini-mesh {
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 0%, rgba(66, 133, 244, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 85% 10%, rgba(155, 114, 203, 0.1), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(217, 101, 112, 0.08), transparent 55%),
+    var(--color-gemini-bg);
+}
+
+.gemini-card {
+  border-radius: 1.5rem;
+  border: 1px solid var(--color-gemini-border);
+  background: var(--color-gemini-surface);
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+}
+
+.gemini-chip {
+  border-radius: 9999px;
+  background: var(--color-gemini-chip);
+  color: var(--color-gemini-text-secondary);
 }
