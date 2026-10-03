@@ -1,4 +1,5 @@
 import { DownloadButton } from '../components/DownloadButton'
+import { GeminiMark } from '../components/GeminiMark'
 
 const privacyPillars = [
   {
@@ -92,35 +93,35 @@ export function HomePage() {
 
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b border-white/5">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(94,234,212,0.15),transparent)]"
-        aria-hidden
-      />
+    <section className="relative overflow-hidden border-b border-[var(--color-gemini-border)]">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-trust)]/30 bg-[var(--color-trust)]/10 px-3 py-1 text-xs font-medium text-[var(--color-trust)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-trust)]" />
+          <div className="mb-6 flex justify-center">
+            <GeminiMark size={56} />
+          </div>
+          <p className="gemini-chip mb-6 inline-flex items-center gap-2 px-4 py-1.5 text-xs font-medium">
             Privacy-first · Local AI · macOS
           </p>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            Meeting notes that never leave your Mac
+          <h1 className="text-4xl font-normal tracking-tight sm:text-5xl lg:text-6xl">
+            <span className="gemini-gradient-text font-medium">Meeting notes</span>
+            <br />
+            that never leave your Mac
           </h1>
-          <p className="mt-6 text-lg leading-relaxed text-[var(--color-text-secondary)] sm:text-xl">
+          <p className="mt-6 text-lg leading-relaxed text-[var(--color-gemini-text-secondary)] sm:text-xl">
             Record Plus captures conversations, transcribes on device, and summarizes with{' '}
-            <strong className="font-medium text-[var(--color-text-primary)]">Ollama</strong>—so
-            sensitive discussions stay under your control, not in someone else&apos;s cloud.
+            <strong className="font-medium text-[var(--color-gemini-text)]">Ollama</strong>—a
+            Gemini-like experience powered entirely on your hardware.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <DownloadButton size="large" />
             <a
               href="#how-it-works"
-              className="rounded-xl border border-white/10 px-8 py-4 text-base font-medium text-[var(--color-text-primary)] transition hover:border-white/20 hover:bg-white/5"
+              className="rounded-full border border-[var(--color-gemini-border)] bg-white px-8 py-3.5 text-base font-medium text-[var(--color-gemini-text)] transition hover:bg-[var(--color-gemini-chip)]"
             >
               See how it works
             </a>
           </div>
-          <p className="mt-8 text-sm text-[var(--color-text-muted)]">
+          <p className="mt-8 text-sm text-[var(--color-gemini-text-muted)]">
             Requires macOS and Ollama · No account required · No cloud upload of audio
           </p>
         </div>
@@ -131,24 +132,23 @@ function HeroSection() {
 
 function PrivacyPillarsSection() {
   return (
-    <section className="border-b border-white/5 bg-[var(--color-surface-900)] py-16 sm:py-20">
+    <section className="border-b border-[var(--color-gemini-border)] bg-[var(--color-gemini-bg-soft)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Built on privacy pillars</h2>
-          <p className="mt-4 text-[var(--color-text-secondary)]">
+          <h2 className="text-3xl font-normal tracking-tight sm:text-4xl">
+            Built on <span className="gemini-gradient-text font-medium">privacy pillars</span>
+          </h2>
+          <p className="mt-4 text-[var(--color-gemini-text-secondary)]">
             Trust isn&apos;t a checkbox—it&apos;s the architecture. Every design choice keeps your
             voice and words local.
           </p>
         </div>
-        <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {privacyPillars.map((pillar) => (
-            <li
-              key={pillar.title}
-              className="rounded-2xl border border-white/5 bg-[var(--color-surface-800)]/50 p-6 transition hover:border-[var(--color-accent)]/20"
-            >
+            <li key={pillar.title} className="gemini-card p-6 transition hover:shadow-md">
               <PillarIcon name={pillar.icon} />
-              <h3 className="mt-4 font-semibold">{pillar.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              <h3 className="mt-4 font-medium text-[var(--color-gemini-text)]">{pillar.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
                 {pillar.description}
               </p>
             </li>
@@ -160,7 +160,7 @@ function PrivacyPillarsSection() {
 }
 
 function PillarIcon({ name }: { name: string }) {
-  const className = 'h-10 w-10 text-[var(--color-accent)]'
+  const className = 'h-9 w-9 text-[var(--color-gemini-blue)]'
   switch (name) {
     case 'shield':
       return (
@@ -191,37 +191,35 @@ function PillarIcon({ name }: { name: string }) {
 
 function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="scroll-mt-20 border-b border-white/5 py-16 sm:py-20">
+    <section id="how-it-works" className="scroll-mt-20 border-b border-[var(--color-gemini-border)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">How it works with Ollama</h2>
-            <p className="mt-4 text-[var(--color-text-secondary)]">
-              Ollama runs open models on your Mac. Record Plus connects to your local Ollama instance—
-              not a hosted API—so summaries and chat about your notes stay on the same machine as your
-              recordings.
+            <h2 className="text-3xl font-normal tracking-tight sm:text-4xl">
+              How it works with <span className="gemini-gradient-text font-medium">Ollama</span>
+            </h2>
+            <p className="mt-4 text-[var(--color-gemini-text-secondary)]">
+              Ollama runs open models on your Mac. Record Plus connects to your local Ollama instance—not
+              a hosted API—so summaries stay on the same machine as your recordings.
             </p>
-            <div className="mt-8 rounded-2xl border border-[var(--color-accent)]/20 bg-[var(--color-surface-800)] p-6">
-              <h3 className="font-semibold text-[var(--color-accent)]">First-time onboarding</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            <div className="gemini-card mt-8 border-[var(--color-gemini-blue-soft)] bg-[var(--color-gemini-blue-soft)]/40 p-6">
+              <h3 className="font-medium text-[var(--color-gemini-blue)]">First-time onboarding</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
                 When you open Record Plus, we detect whether Ollama is installed. If not, you get
                 step-by-step guidance: install Ollama, pull a recommended model, and verify the
                 connection—usually under five minutes on Apple Silicon or Intel Macs.
               </p>
             </div>
           </div>
-          <ol className="space-y-4">
+          <ol className="space-y-3">
             {howItWorks.map((item) => (
-              <li
-                key={item.step}
-                className="flex gap-4 rounded-2xl border border-white/5 bg-[var(--color-surface-900)] p-5"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15 text-sm font-bold text-[var(--color-accent)]">
+              <li key={item.step} className="gemini-card flex gap-4 p-5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-gemini-blue-soft)] text-sm font-medium text-[var(--color-gemini-blue)]">
                   {item.step}
                 </span>
                 <div>
-                  <h3 className="font-semibold">{item.title}</h3>
-                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{item.body}</p>
+                  <h3 className="font-medium text-[var(--color-gemini-text)]">{item.title}</h3>
+                  <p className="mt-1 text-sm text-[var(--color-gemini-text-secondary)]">{item.body}</p>
                 </div>
               </li>
             ))}
@@ -234,45 +232,51 @@ function HowItWorksSection() {
 
 function FeaturesComparisonSection() {
   return (
-    <section id="features" className="scroll-mt-20 bg-[var(--color-surface-900)] py-16 sm:py-20">
+    <section id="features" className="scroll-mt-20 bg-[var(--color-gemini-bg-soft)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Local-first vs. typical cloud note tools</h2>
-          <p className="mt-4 text-[var(--color-text-secondary)]">
-            Many meeting assistants are convenient because they process everything in the cloud. Record
-            Plus trades that tradeoff for control—without sacrificing AI-powered summaries on your own
-            hardware.
+          <h2 className="text-3xl font-normal tracking-tight sm:text-4xl">
+            Local-first vs. typical cloud note tools
+          </h2>
+          <p className="mt-4 text-[var(--color-gemini-text-secondary)]">
+            Many meeting assistants process everything in the cloud. Record Plus trades that for
+            control—without sacrificing AI-powered summaries on your own hardware.
           </p>
         </div>
-        <div className="mt-10 overflow-x-auto rounded-2xl border border-white/5">
+        <div className="gemini-card mt-10 overflow-hidden">
           <table className="w-full min-w-[520px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-[var(--color-surface-800)]">
-                <th scope="col" className="px-4 py-4 font-semibold sm:px-6">
+              <tr className="border-b border-[var(--color-gemini-border)] bg-white">
+                <th scope="col" className="px-4 py-4 font-medium sm:px-6">
                   {' '}
                 </th>
-                <th scope="col" className="px-4 py-4 font-semibold text-[var(--color-accent)] sm:px-6">
+                <th scope="col" className="px-4 py-4 font-medium text-[var(--color-gemini-blue)] sm:px-6">
                   Record Plus
                 </th>
-                <th scope="col" className="px-4 py-4 font-semibold text-[var(--color-text-muted)] sm:px-6">
+                <th scope="col" className="px-4 py-4 font-medium text-[var(--color-gemini-text-muted)] sm:px-6">
                   Typical cloud assistant
                 </th>
               </tr>
             </thead>
             <tbody>
               {comparisonRows.map((row) => (
-                <tr key={row.aspect} className="border-b border-white/5 last:border-0">
-                  <th scope="row" className="px-4 py-4 font-medium text-[var(--color-text-secondary)] sm:px-6">
+                <tr key={row.aspect} className="border-b border-[var(--color-gemini-border)] last:border-0">
+                  <th
+                    scope="row"
+                    className="px-4 py-4 font-medium text-[var(--color-gemini-text-secondary)] sm:px-6"
+                  >
                     {row.aspect}
                   </th>
-                  <td className="px-4 py-4 sm:px-6">{row.recordPlus}</td>
-                  <td className="px-4 py-4 text-[var(--color-text-muted)] sm:px-6">{row.typicalCloud}</td>
+                  <td className="px-4 py-4 text-[var(--color-gemini-text)] sm:px-6">{row.recordPlus}</td>
+                  <td className="px-4 py-4 text-[var(--color-gemini-text-muted)] sm:px-6">
+                    {row.typicalCloud}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <ul className="mt-10 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-10 grid gap-3 sm:grid-cols-3">
           {[
             'Menu bar recording with one click',
             'Search across local transcripts',
@@ -280,7 +284,7 @@ function FeaturesComparisonSection() {
           ].map((feature) => (
             <li
               key={feature}
-              className="flex items-start gap-3 rounded-xl border border-white/5 px-4 py-3 text-sm text-[var(--color-text-secondary)]"
+              className="gemini-card flex items-start gap-3 px-4 py-3 text-sm text-[var(--color-gemini-text-secondary)]"
             >
               <CheckIcon />
               {feature}
@@ -294,7 +298,13 @@ function FeaturesComparisonSection() {
 
 function CheckIcon() {
   return (
-    <svg className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-trust)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg
+      className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-gemini-blue)]"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   )
@@ -304,16 +314,19 @@ function DownloadSection() {
   return (
     <section id="download" className="scroll-mt-20 py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="rounded-3xl border border-[var(--color-accent)]/20 bg-gradient-to-br from-[var(--color-surface-800)] to-[var(--color-surface-900)] px-6 py-12 text-center sm:px-12">
-          <h2 className="text-3xl font-bold tracking-tight">Ready for private meeting notes?</h2>
-          <p className="mx-auto mt-4 max-w-xl text-[var(--color-text-secondary)]">
+        <div className="gemini-card border-[var(--color-gemini-blue-soft)] bg-gradient-to-br from-white to-[var(--color-gemini-bg-soft)] px-6 py-12 text-center sm:px-12">
+          <GeminiMark size={40} className="mx-auto" />
+          <h2 className="mt-4 text-3xl font-normal tracking-tight">
+            Ready for <span className="gemini-gradient-text font-medium">private</span> meeting notes?
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-[var(--color-gemini-text-secondary)]">
             Download Record Plus for Mac, set up Ollama once, and keep every transcript on your machine.
             The .dmg installer will be available here when we ship.
           </p>
           <div className="mt-8">
             <DownloadButton size="large" />
           </div>
-          <p className="mt-6 text-xs text-[var(--color-text-muted)]">
+          <p className="mt-6 text-xs text-[var(--color-gemini-text-muted)]">
             Placeholder link · Replace with signed .dmg URL before launch
           </p>
         </div>

@@ -6,7 +6,7 @@ type DownloadButtonProps = {
 export function DownloadButton({ className = '', size = 'default' }: DownloadButtonProps) {
   const sizeClasses =
     size === 'large'
-      ? 'px-8 py-4 text-base'
+      ? 'px-8 py-3.5 text-base'
       : 'px-5 py-2.5 text-sm'
 
   return (
@@ -16,11 +16,11 @@ export function DownloadButton({ className = '', size = 'default' }: DownloadBut
       aria-label="Download Record Plus for Mac (coming soon)"
       title="macOS .dmg download coming soon"
       onClick={(e) => e.preventDefault()}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] font-semibold text-[var(--color-surface-950)] shadow-lg shadow-teal-500/20 transition hover:bg-[var(--color-accent-muted)] ${sizeClasses} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] ${sizeClasses} ${className}`}
     >
       <AppleIcon />
       Download for Mac
-      <span className="rounded-md bg-black/10 px-1.5 py-0.5 text-xs font-medium opacity-80">Soon</span>
+      <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">Soon</span>
     </a>
   )
 }

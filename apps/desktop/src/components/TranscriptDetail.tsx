@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { generateNotes, updateTranscript } from "../api";
+import { GeminiMark } from "./GeminiMark";
 import type { AppSettings, Transcript } from "../types";
 
 interface Props {
@@ -26,7 +27,9 @@ export function TranscriptDetail({ transcript, settings, onUpdated }: Props) {
   if (!transcript) {
     return (
       <div className="detail empty">
-        <p>Select a recording or start a new one.</p>
+        <GeminiMark size={48} />
+        <h2 className="gemini-greeting">Hello</h2>
+        <p>Select a recording from the sidebar or start a new one to capture meeting notes locally.</p>
       </div>
     );
   }
