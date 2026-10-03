@@ -54,7 +54,7 @@ The Vite dev server runs on port **1420**; Tauri opens the desktop window.
 
 ## Architecture
 
-See the project architecture note: [desktop-app.md](https://cursor.com) (in the Record App project store at `docs/desktop-app.md`).
+High-level design is documented in the Record App project store at `docs/desktop-app.md` (Tauri commands, SQLite schema, Ollama flow).
 
 Rust modules: `db`, `ollama`, `commands`, `state`. React: `OnboardingWizard`, `SettingsPanel`, `TranscriptList`, `TranscriptDetail`, `useRecording`.
 
