@@ -6,7 +6,18 @@
 
 | Path | Description |
 |------|-------------|
+| [`apps/web/`](apps/web/) | **Record Plus** marketing site — Vite + React static site for [notestack.fyi](https://notestack.fyi) |
 | [`apps/desktop/`](apps/desktop/) | **Record Plus** — Tauri 2 + React macOS desktop app (recording, transcripts, Ollama onboarding, meeting notes) |
+
+## Quick start (web)
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+See [apps/web/README.md](apps/web/README.md) for build and deploy notes.
 
 ## Quick start (desktop)
 
