@@ -9,6 +9,7 @@ import { OnboardingWizard } from "./components/OnboardingWizard";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { TranscriptDetail } from "./components/TranscriptDetail";
 import { TranscriptList } from "./components/TranscriptList";
+import { GeminiMark } from "./components/GeminiMark";
 import { useRecording } from "./hooks/useRecording";
 import type { AppSettings, Transcript } from "./types";
 
@@ -85,8 +86,10 @@ function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <span className="logo" aria-hidden>●</span>
-          <span>Record Plus</span>
+          <GeminiMark size={28} />
+          <span>
+            Record <span className="brand-plus">Plus</span>
+          </span>
         </div>
         <nav>
           <button
@@ -115,6 +118,7 @@ function App() {
       ) : (
         <main className="layout">
           <aside className="sidebar">
+            <p className="sidebar-section-label">Recent</p>
             <div className="record-bar">
               {!recording.recording ? (
                 <button
@@ -122,7 +126,7 @@ function App() {
                   className="record-btn"
                   onClick={() => void recording.start()}
                 >
-                  Record
+                  New recording
                 </button>
               ) : (
                 <button
