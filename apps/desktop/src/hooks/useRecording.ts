@@ -1,6 +1,13 @@
 import { useCallback, useRef, useState } from "react";
-import { createTranscript, saveRecordingAudio, updateTranscript } from "../api";
-import type { Transcript } from "../types";
+import {
+  createTranscript,
+  enhanceNotes,
+  generateInstantSummary,
+  saveRecordingAudio,
+  stripAudioAfterTranscribe,
+  updateTranscript,
+} from "../api";
+import type { AppSettings, Transcript } from "../types";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -22,12 +29,17 @@ function getSpeechRecognition(): SpeechRecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export function useRecording(onSaved: (t: Transcript) => void) {
+export function useRecording(
+  settings: AppSettings,
+  onSaved: (t: Transcript) => void,
+) {
   const [recording, setRecording] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [liveText, setLiveText] = useState("");
+  const [manualNotes, setManualNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [pendingTitle, setPendingTitle] = useState<string | undefined>();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -35,6 +47,8 @@ export function useRecording(onSaved: (t: Transcript) => void) {
   const startRef = useRef<number>(0);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const transcriptRef = useRef<Transcript | null>(null);
+  const liveTextRef = useRef("");
+  const manualNotesRef = useRef("");
 
   const stopTimer = () => {
     if (timerRef.current !== null) {
@@ -55,12 +69,16 @@ export function useRecording(onSaved: (t: Transcript) => void) {
     }
   };
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (title?: string) => {
     setError(null);
     setLiveText("");
+    setManualNotes("");
+    liveTextRef.current = "";
+    manualNotesRef.current = "";
+    setPendingTitle(title);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const transcript = await createTranscript();
+      const transcript = await createTranscript(title);
       transcriptRef.current = transcript;
       setCurrentId(transcript.id);
 
@@ -94,7 +112,9 @@ export function useRecording(onSaved: (t: Transcript) => void) {
             const base = prev.split("\n").filter(Boolean);
             if (final) base.push(final.trim());
             const line = base.join("\n");
-            return interim ? `${line}\n${interim}` : line;
+            const next = interim ? `${line}\n${interim}` : line;
+            liveTextRef.current = next;
+            return next;
           });
         };
         recognition.onerror = () => {
@@ -127,6 +147,8 @@ export function useRecording(onSaved: (t: Transcript) => void) {
     if (!recorder || !transcript) return;
 
     const duration = Date.now() - startRef.current;
+    const text = liveTextRef.current.trim();
+    const notes = manualNotesRef.current.trim();
 
     await new Promise<void>((resolve) => {
       recorder.onstop = () => resolve();
@@ -139,25 +161,67 @@ export function useRecording(onSaved: (t: Transcript) => void) {
     const base64 = arrayBufferToBase64(buffer);
     const ext = recorder.mimeType.includes("webm") ? "webm" : "audio";
 
-    const text = liveText.trim();
     let updated = await updateTranscript({
       id: transcript.id,
       transcript_text: text,
+      manual_notes: notes,
       duration_ms: duration,
+      title: pendingTitle,
     });
     updated = await saveRecordingAudio(transcript.id, base64, ext);
+
+    if (settings.auto_instant_summary && text) {
+      try {
+        updated = await generateInstantSummary(
+          transcript.id,
+          settings.default_model,
+        );
+      } catch {
+        /* optional */
+      }
+    }
+
+    if (settings.auto_enhance_on_stop && (text || notes)) {
+      try {
+        updated = await enhanceNotes(transcript.id, settings.default_model);
+      } catch {
+        /* optional */
+      }
+    }
+
+    if (settings.delete_audio_after_transcribe) {
+      try {
+        updated = await stripAudioAfterTranscribe(transcript.id);
+      } catch {
+        /* optional */
+      }
+    }
+
     onSaved(updated);
     setCurrentId(null);
+    setPendingTitle(undefined);
     transcriptRef.current = null;
     mediaRecorderRef.current = null;
     chunksRef.current = [];
-  }, [liveText, onSaved]);
+  }, [onSaved, pendingTitle, settings]);
+
+  const setManualNotesTracked = (v: string) => {
+    manualNotesRef.current = v;
+    setManualNotes(v);
+  };
+
+  const setLiveTextTracked = (v: string) => {
+    liveTextRef.current = v;
+    setLiveText(v);
+  };
 
   return {
     recording,
     elapsedMs,
     liveText,
-    setLiveText,
+    setLiveText: setLiveTextTracked,
+    manualNotes,
+    setManualNotes: setManualNotesTracked,
     error,
     currentId,
     start,

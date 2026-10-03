@@ -7,6 +7,7 @@ import {
   ollamaTestModel,
   saveSettings,
 } from "../api";
+import { normalizeSettings } from "../lib/settings";
 import type { AppSettings, OllamaModel } from "../types";
 
 const STEPS = [
@@ -73,11 +74,12 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     try {
       const reply = await ollamaTestModel(model, baseUrl);
       setStatus(reply);
-      const next: AppSettings = {
+      const next: AppSettings = normalizeSettings({
+        ...settings,
         ollama_base_url: baseUrl,
         default_model: model,
         onboarding_complete: true,
-      };
+      });
       await saveSettings(next);
       onComplete(next);
     } catch (e) {

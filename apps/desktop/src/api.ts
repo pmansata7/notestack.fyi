@@ -13,8 +13,14 @@ export async function getDataDir(): Promise<string> {
   return invoke("get_data_dir");
 }
 
-export async function listTranscripts(): Promise<Transcript[]> {
-  return invoke("list_transcripts");
+export async function listTranscripts(
+  includeDeleted = false,
+): Promise<Transcript[]> {
+  return invoke("list_transcripts", { include_deleted: includeDeleted });
+}
+
+export async function searchTranscripts(query: string): Promise<Transcript[]> {
+  return invoke("search_transcripts", { query });
 }
 
 export async function createTranscript(
@@ -31,6 +37,11 @@ export async function updateTranscript(args: {
   title?: string;
   transcript_text?: string;
   notes_text?: string;
+  manual_notes?: string;
+  ai_additions?: string;
+  instant_summary?: string;
+  tasks_json?: string;
+  template_id?: string;
   duration_ms?: number;
 }): Promise<Transcript> {
   return invoke("update_transcript", { args });
@@ -38,6 +49,14 @@ export async function updateTranscript(args: {
 
 export async function deleteTranscript(id: string): Promise<void> {
   return invoke("delete_transcript", { id });
+}
+
+export async function restoreTranscript(id: string): Promise<void> {
+  return invoke("restore_transcript", { id });
+}
+
+export async function purgeTranscript(id: string): Promise<void> {
+  return invoke("purge_transcript", { id });
 }
 
 export async function saveRecordingAudio(
@@ -52,6 +71,12 @@ export async function saveRecordingAudio(
       extension,
     },
   });
+}
+
+export async function stripAudioAfterTranscribe(
+  transcriptId: string,
+): Promise<Transcript> {
+  return invoke("strip_audio_after_transcribe", { transcript_id: transcriptId });
 }
 
 export async function ollamaCheckConnection(
@@ -87,5 +112,61 @@ export async function generateNotes(
   return invoke("generate_notes_from_transcript", {
     transcript_id: transcriptId,
     model,
+  });
+}
+
+export async function enhanceNotes(
+  transcriptId: string,
+  model?: string,
+): Promise<Transcript> {
+  return invoke("enhance_notes_for_transcript", {
+    transcript_id: transcriptId,
+    model,
+  });
+}
+
+export async function generateInstantSummary(
+  transcriptId: string,
+  model?: string,
+): Promise<Transcript> {
+  return invoke("generate_instant_summary", {
+    transcript_id: transcriptId,
+    model,
+  });
+}
+
+export async function askAcrossMeetings(
+  question: string,
+  model?: string,
+): Promise<string> {
+  return invoke("ask_across_meetings", {
+    args: { question, model },
+  });
+}
+
+export async function generateDailyDigest(model?: string): Promise<string> {
+  return invoke("generate_daily_digest", { model });
+}
+
+export async function generateMeetingPrep(
+  eventTitle: string,
+  model?: string,
+): Promise<string> {
+  return invoke("generate_meeting_prep", {
+    args: { event_title: eventTitle, model },
+  });
+}
+
+export async function runLiveSkill(
+  skill: string,
+  transcriptSoFar: string,
+  model?: string,
+): Promise<string> {
+  return invoke("run_live_skill", {
+    args: {
+      skill,
+      transcript_so_far: transcriptSoFar,
+      model,
+    },
   });
 }
