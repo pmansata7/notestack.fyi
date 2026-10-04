@@ -23,9 +23,12 @@ export function TrashPanel({ onRestored }: Props) {
       <h2>Trash</h2>
       <p className="muted">Restore or permanently delete notes (Granola-style).</p>
       {items.length === 0 ? (
-        <p className="muted">Trash is empty.</p>
+        <div className="empty-state">
+          <p className="empty-title">Trash is empty</p>
+          <p className="muted small">Deleted recordings appear here until you restore or remove them.</p>
+        </div>
       ) : (
-        <ul className="transcript-list">
+        <ul className="transcript-list trash-list">
           {items.map((t) => (
             <li key={t.id}>
               <div className="list-item static">

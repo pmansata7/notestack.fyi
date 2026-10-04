@@ -121,19 +121,28 @@ function App() {
   };
 
   if (!settings) {
-    return <div className="app loading">Loading…</div>;
+    return (
+      <div className="app loading">
+        <div className="loading-shell">
+          <GeminiMark size={40} />
+          <p className="muted">Loading Record Plus…</p>
+        </div>
+      </div>
+    );
   }
 
   if (view === "onboarding") {
     return (
       <div className="app">
-        <OnboardingWizard
-          settings={settings}
-          onComplete={(s) => {
-            setSettings(normalizeSettings(s));
-            setView("main");
-          }}
-        />
+        <main className="page-shell">
+          <OnboardingWizard
+            settings={settings}
+            onComplete={(s) => {
+              setSettings(normalizeSettings(s));
+              setView("main");
+            }}
+          />
+        </main>
       </div>
     );
   }
@@ -188,27 +197,37 @@ function App() {
       )}
 
       {view === "settings" ? (
-        <SettingsPanel
-          settings={settings}
-          onSettingsChange={(s) => void persistSettings(s)}
-          onRerunOnboarding={() => setView("onboarding")}
-        />
+        <main className="page-shell">
+          <SettingsPanel
+            settings={settings}
+            onSettingsChange={(s) => void persistSettings(s)}
+            onRerunOnboarding={() => setView("onboarding")}
+          />
+        </main>
       ) : view === "ask" ? (
-        <AskMeetingsPanel settings={settings} />
+        <main className="page-shell">
+          <AskMeetingsPanel settings={settings} />
+        </main>
       ) : view === "tasks" ? (
-        <TasksPanel transcripts={transcripts} />
+        <main className="page-shell">
+          <TasksPanel transcripts={transcripts} />
+        </main>
       ) : view === "trash" ? (
-        <TrashPanel onRestored={() => void refresh()} />
+        <main className="page-shell">
+          <TrashPanel onRestored={() => void refresh()} />
+        </main>
       ) : view === "assistant" ? (
-        <AssistantHub
-          settings={settings}
-          transcripts={transcripts}
-          onSaveSettings={(s) => void persistSettings(s)}
-          onStartRecordingForEvent={(title) => {
-            setView("main");
-            void recording.start(title);
-          }}
-        />
+        <main className="page-shell page-shell-wide">
+          <AssistantHub
+            settings={settings}
+            transcripts={transcripts}
+            onSaveSettings={(s) => void persistSettings(s)}
+            onStartRecordingForEvent={(title) => {
+              setView("main");
+              void recording.start(title);
+            }}
+          />
+        </main>
       ) : (
         <main className="layout">
           <aside className="sidebar">

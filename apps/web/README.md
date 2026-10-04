@@ -1,6 +1,6 @@
-# Record Plus — marketing website
+# NoteStack — marketing website
 
-Privacy-focused static site for Record Plus (local AI meeting notes with Ollama).
+Privacy-focused static site for [NoteStack](https://notestack.fyi) (local AI meeting notes with Ollama).
 
 ## Development
 
@@ -19,5 +19,3 @@ npm run preview
 ```
 
 Static output is in `dist/`.
-
-See project doc: `docs/marketing-site.md` in the Record App project store.
