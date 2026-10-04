@@ -143,6 +143,104 @@ impl OllamaClient {
         self.generate(model, &prompt)
     }
 
+    pub fn instant_summary(&self, model: &str, transcript: &str) -> Result<String, OllamaError> {
+        let prompt = format!(
+            "Write a very short instant meeting recap (3-5 bullet points max) from this transcript. Be concise.\n\nTranscript:\n{}\n",
+            transcript
+        );
+        self.generate(model, &prompt)
+    }
+
+    pub fn enhance_notes(
+        &self,
+        model: &str,
+        transcript: &str,
+        manual_notes: &str,
+        template_label: &str,
+    ) -> Result<String, OllamaError> {
+        let prompt = format!(
+            "You enhance meeting notes for a {template} meeting.\n\
+            The user wrote rough notes during the call (preserve their meaning; do not contradict them).\n\
+            Merge context from the full transcript and return ONLY the AI-added sections in markdown.\n\
+            Do not repeat the user's bullets verbatim — expand, structure, and fill gaps.\n\n\
+            User notes during meeting:\n{manual}\n\n\
+            Full transcript:\n{transcript}\n",
+            template = template_label,
+            manual = if manual_notes.trim().is_empty() {
+                "(none — infer from transcript only)"
+            } else {
+                manual_notes
+            },
+            transcript = transcript
+        );
+        self.generate(model, &prompt)
+    }
+
+    pub fn extract_tasks_json(&self, model: &str, notes: &str) -> Result<String, OllamaError> {
+        let prompt = format!(
+            "Extract action items as a JSON array of objects with keys: title, assignee (or null), done (boolean false).\n\
+            Return ONLY valid JSON, no markdown.\n\nNotes:\n{}\n",
+            notes
+        );
+        self.generate(model, &prompt)
+    }
+
+    pub fn ask_across_meetings(
+        &self,
+        model: &str,
+        question: &str,
+        context: &str,
+    ) -> Result<String, OllamaError> {
+        let prompt = format!(
+            "You answer questions using the user's local meeting history below. If unsure, say so.\n\n\
+            Meeting history:\n{context}\n\n\
+            Question: {question}\n",
+            context = context,
+            question = question
+        );
+        self.generate(model, &prompt)
+    }
+
+    pub fn daily_digest(&self, model: &str, context: &str) -> Result<String, OllamaError> {
+        let prompt = format!(
+            "Create a Daily Digest for the last 24 hours of meetings: highlights, decisions, and action items.\n\
+            Use markdown sections.\n\n{}\n",
+            context
+        );
+        self.generate(model, &prompt)
+    }
+
+    pub fn meeting_prep(&self, model: &str, event_title: &str, context: &str) -> Result<String, OllamaError> {
+        let prompt = format!(
+            "Create a short meeting brief for \"{title}\": who/what to expect, open threads from past notes, and suggested agenda.\n\n\
+            Past notes context:\n{context}\n",
+            title = event_title,
+            context = context
+        );
+        self.generate(model, &prompt)
+    }
+
+    pub fn live_skill(
+        &self,
+        model: &str,
+        skill: &str,
+        transcript_so_far: &str,
+    ) -> Result<String, OllamaError> {
+        let instruction = match skill {
+            "catch-up" => "Summarize what was discussed in the last few minutes so someone who zoned out can catch up.",
+            "summarize" => "Summarize the meeting so far in bullet points.",
+            "action-items" => "List action items mentioned so far.",
+            "follow-up-questions" => "Suggest smart follow-up questions based on the discussion so far.",
+            other => other,
+        };
+        let prompt = format!(
+            "{instruction}\n\nTranscript so far:\n{transcript}\n",
+            instruction = instruction,
+            transcript = transcript_so_far
+        );
+        self.generate(model, &prompt)
+    }
+
     fn generate(&self, model: &str, prompt: &str) -> Result<String, OllamaError> {
         let url = format!("{}/api/generate", self.base_url.trim_end_matches('/'));
         let resp = self

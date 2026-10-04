@@ -13,14 +13,16 @@ export function DownloadButton({ className = '', size = 'default' }: DownloadBut
     <a
       href="#"
       role="button"
-      aria-label="Download Record Plus for Mac (coming soon)"
+      aria-label="Download NoteStack for Mac (coming soon)"
       title="macOS .dmg download coming soon"
       onClick={(e) => e.preventDefault()}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] ${sizeClasses} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gemini-blue)] ${sizeClasses} ${className}`}
     >
       <AppleIcon />
       Download for Mac
-      <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">Soon</span>
+      <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-xs font-semibold tracking-wide">
+        Soon
+      </span>
     </a>
   )
 }

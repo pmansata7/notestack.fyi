@@ -2,13 +2,18 @@
 
 Local-first meeting recorder for macOS (Tauri 2 + React). Capture microphone audio, store transcripts and recordings on disk, and generate meeting notes with [Ollama](https://ollama.com) on `localhost:11434`.
 
-## Features (MVP)
+## Features
 
-- Main window with **Record** / **Stop**, sidebar transcript list, detail editor
-- SQLite database + audio files under `~/Library/Application Support/Record Plus/`
-- **Ollama onboarding wizard**: install link, connection test, model pull, smoke test, default model
-- **Generate notes** from transcript text via Ollama `/api/generate`
-- Live transcript via Web Speech API when the webview supports it (editable during recording)
+Desktop parity with **Fireflies** and **Granola** (local-first) — see [docs/desktop-competitive-features.md](../../docs/desktop-competitive-features.md).
+
+- **Take notes (no bot)** — record + live transcript; Live Assist floating pane (transcript, manual notes, AI skills)
+- **Enhance notes** — Granola-style merge of your bullets + transcript (Ollama)
+- **Instant summary**, full AI notes, **tasks**, **daily digest**, **meeting briefs**
+- **Ask across meetings** — chat over local history
+- **Search**, **trash/restore**, meeting **templates**, calendar reminders (local events)
+- **Dictation** (Fireflies Talk–style) — hold Fn / Ctrl+Win, copies to clipboard
+- SQLite + audio under `~/Library/Application Support/Record Plus/`
+- **Ollama onboarding wizard** and all AI via `localhost` Ollama
 
 ## Prerequisites (macOS)
 

@@ -44,15 +44,145 @@ body {
     var(--color-gemini-bg);
 }
 
+.gemini-section-heading {
+  font-size: 1.875rem;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .gemini-section-heading {
+    font-size: 2.25rem;
+  }
+}
+
+.gemini-section-lead {
+  margin-top: 1rem;
+  color: var(--color-gemini-text-secondary);
+  line-height: 1.6;
+}
+
 .gemini-card {
   border-radius: 1.5rem;
   border: 1px solid var(--color-gemini-border);
   background: var(--color-gemini-surface);
-  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.05);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.gemini-card-interactive:hover {
+  border-color: color-mix(in srgb, var(--color-gemini-blue) 22%, var(--color-gemini-border));
+  box-shadow: 0 6px 20px rgba(60, 64, 67, 0.08);
 }
 
 .gemini-chip {
   border-radius: 9999px;
   background: var(--color-gemini-chip);
   color: var(--color-gemini-text-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-gemini-border) 80%, transparent);
+}
+
+.gemini-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-gemini-blue-soft) 55%, white);
+  color: var(--color-gemini-blue);
+}
+
+.gemini-step-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--color-gemini-blue-soft);
+  color: var(--color-gemini-blue);
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.gemini-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--color-gemini-border);
+  background: white;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-gemini-text);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.gemini-btn-secondary:hover {
+  background: var(--color-gemini-chip);
+  border-color: color-mix(in srgb, var(--color-gemini-blue) 18%, var(--color-gemini-border));
+}
+
+.gemini-btn-secondary:focus-visible {
+  outline: 2px solid var(--color-gemini-blue);
+  outline-offset: 2px;
+}
+
+.gemini-nav-link {
+  border-radius: 9999px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gemini-text-secondary);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.gemini-nav-link:hover {
+  background: var(--color-gemini-chip);
+  color: var(--color-gemini-text);
+}
+
+.gemini-prose-section {
+  border-radius: 1.25rem;
+  border: 1px solid var(--color-gemini-border);
+  background: white;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.04);
+}
+
+@media (min-width: 640px) {
+  .gemini-prose-section {
+    padding: 1.75rem 2rem;
+  }
+}
+
+.gemini-prose-section h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-gemini-text);
+}
+
+.gemini-text-link {
+  color: var(--color-gemini-blue);
+  font-weight: 500;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+.gemini-text-link:hover {
+  color: var(--color-gemini-blue-hover);
+  text-decoration: underline;
 }

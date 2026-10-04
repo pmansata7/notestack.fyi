@@ -1,9 +1,9 @@
 {
-  "name": "record-plus-web",
+  "name": "notestack-web",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Privacy-focused marketing site for Record Plus — local AI meeting notes",
+  "description": "Privacy-focused marketing site for NoteStack (notestack.fyi) — local AI meeting notes",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
