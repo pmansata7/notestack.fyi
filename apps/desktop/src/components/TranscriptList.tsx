@@ -44,9 +44,11 @@ export function TranscriptList({
         />
       </label>
       {items.length === 0 ? (
-        <div className="empty">
-          <p>No recordings yet.</p>
-          <p className="muted">Press Record to capture audio and transcript text.</p>
+        <div className="empty sidebar-empty">
+          <p className="empty-title">No recordings yet</p>
+          <p className="muted small">
+            Start a session with the button above to capture audio and notes locally.
+          </p>
         </div>
       ) : (
         <ul className="transcript-list">

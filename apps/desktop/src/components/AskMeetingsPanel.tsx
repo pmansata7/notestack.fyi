@@ -43,9 +43,11 @@ export function AskMeetingsPanel({ settings }: Props) {
           }}
         />
       </label>
-      <button type="button" onClick={() => void ask()} disabled={busy}>
-        Ask
-      </button>
+      <div className="row">
+        <button type="button" onClick={() => void ask()} disabled={busy}>
+          Ask
+        </button>
+      </div>
       {answer && <pre className="ask-answer">{answer}</pre>}
     </div>
   );

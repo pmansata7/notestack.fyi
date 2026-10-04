@@ -33,7 +33,12 @@ export function TasksPanel({ transcripts }: Props) {
         Action items extracted when you enhance notes (always on, Fireflies-style).
       </p>
       {tasks.length === 0 ? (
-        <p className="muted">No tasks yet — enhance notes after a meeting.</p>
+        <div className="empty-state">
+          <p className="empty-title">No action items yet</p>
+          <p className="muted small">
+            Run <strong>Enhance notes</strong> on a recording to extract tasks from the meeting.
+          </p>
+        </div>
       ) : (
         <ul className="task-list">
           {tasks.map((row, i) => (
