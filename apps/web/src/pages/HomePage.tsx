@@ -79,6 +79,12 @@ const comparisonRows = [
   },
 ]
 
+const quickFeatures = [
+  'Menu bar recording with one click',
+  'Search across local transcripts',
+  'Export notes in standard formats',
+]
+
 export function HomePage() {
   return (
     <>
@@ -94,13 +100,25 @@ export function HomePage() {
 function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b border-[var(--color-gemini-border)]">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-80"
+        aria-hidden
+        style={{
+          background:
+            'radial-gradient(ellipse 55% 45% at 50% -10%, rgba(66, 133, 244, 0.14), transparent 60%)',
+        }}
+      />
+      <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-6 flex justify-center">
+          <div className="mb-8 flex justify-center">
             <GeminiMark size={56} />
           </div>
-          <p className="gemini-chip mb-6 inline-flex items-center gap-2 px-4 py-1.5 text-xs font-medium">
-            Privacy-first · Local AI · macOS
+          <p className="gemini-chip mb-6 inline-flex items-center gap-2 px-4 py-1.5 text-xs font-medium tracking-wide">
+            <span className="text-[var(--color-gemini-blue)]">Privacy-first</span>
+            <span className="text-[var(--color-gemini-text-muted)]" aria-hidden>·</span>
+            <span>Local AI</span>
+            <span className="text-[var(--color-gemini-text-muted)]" aria-hidden>·</span>
+            <span>macOS</span>
           </p>
           <h1 className="text-4xl font-normal tracking-tight sm:text-5xl lg:text-6xl">
             <span className="gemini-gradient-text font-medium">Meeting notes</span>
@@ -112,16 +130,13 @@ function HeroSection() {
             <strong className="font-medium text-[var(--color-gemini-text)]">Ollama</strong>—a
             Gemini-like experience powered entirely on your hardware.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <DownloadButton size="large" />
-            <a
-              href="#how-it-works"
-              className="rounded-full border border-[var(--color-gemini-border)] bg-white px-8 py-3.5 text-base font-medium text-[var(--color-gemini-text)] transition hover:bg-[var(--color-gemini-chip)]"
-            >
+            <a href="#how-it-works" className="gemini-btn-secondary w-full sm:w-auto">
               See how it works
             </a>
           </div>
-          <p className="mt-8 text-sm text-[var(--color-gemini-text-muted)]">
+          <p className="mt-8 text-sm leading-relaxed text-[var(--color-gemini-text-muted)]">
             Requires macOS and Ollama · No account required · No cloud upload of audio
           </p>
         </div>
@@ -135,18 +150,20 @@ function PrivacyPillarsSection() {
     <section className="border-b border-[var(--color-gemini-border)] bg-[var(--color-gemini-bg-soft)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-normal tracking-tight sm:text-4xl">
+          <h2 className="gemini-section-heading">
             Built on <span className="gemini-gradient-text font-medium">privacy pillars</span>
           </h2>
-          <p className="mt-4 text-[var(--color-gemini-text-secondary)]">
+          <p className="gemini-section-lead">
             Trust isn&apos;t a checkbox—it&apos;s the architecture. Every design choice keeps your
             voice and words local.
           </p>
         </div>
-        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {privacyPillars.map((pillar) => (
-            <li key={pillar.title} className="gemini-card p-6 transition hover:shadow-md">
-              <PillarIcon name={pillar.icon} />
+            <li key={pillar.title} className="gemini-card gemini-card-interactive p-6">
+              <div className="gemini-icon-badge">
+                <PillarIcon name={pillar.icon} />
+              </div>
               <h3 className="mt-4 font-medium text-[var(--color-gemini-text)]">{pillar.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
                 {pillar.description}
@@ -160,7 +177,7 @@ function PrivacyPillarsSection() {
 }
 
 function PillarIcon({ name }: { name: string }) {
-  const className = 'h-9 w-9 text-[var(--color-gemini-blue)]'
+  const className = 'h-5 w-5'
   switch (name) {
     case 'shield':
       return (
@@ -193,16 +210,16 @@ function HowItWorksSection() {
   return (
     <section id="how-it-works" className="scroll-mt-20 border-b border-[var(--color-gemini-border)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-start">
+        <div className="grid gap-12 lg:grid-cols-2 lg:items-start lg:gap-16">
           <div>
-            <h2 className="text-3xl font-normal tracking-tight sm:text-4xl">
+            <h2 className="gemini-section-heading">
               How it works with <span className="gemini-gradient-text font-medium">Ollama</span>
             </h2>
-            <p className="mt-4 text-[var(--color-gemini-text-secondary)]">
+            <p className="gemini-section-lead">
               Ollama runs open models on your Mac. Record Plus connects to your local Ollama instance—not
               a hosted API—so summaries stay on the same machine as your recordings.
             </p>
-            <div className="gemini-card mt-8 border-[var(--color-gemini-blue-soft)] bg-[var(--color-gemini-blue-soft)]/40 p-6">
+            <div className="gemini-card mt-8 border-[var(--color-gemini-blue-soft)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_35%,white)] p-6">
               <h3 className="font-medium text-[var(--color-gemini-blue)]">First-time onboarding</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
                 When you open Record Plus, we detect whether Ollama is installed. If not, you get
@@ -211,15 +228,15 @@ function HowItWorksSection() {
               </p>
             </div>
           </div>
-          <ol className="space-y-3">
+          <ol className="space-y-4">
             {howItWorks.map((item) => (
               <li key={item.step} className="gemini-card flex gap-4 p-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-gemini-blue-soft)] text-sm font-medium text-[var(--color-gemini-blue)]">
-                  {item.step}
-                </span>
+                <span className="gemini-step-badge">{item.step}</span>
                 <div>
                   <h3 className="font-medium text-[var(--color-gemini-text)]">{item.title}</h3>
-                  <p className="mt-1 text-sm text-[var(--color-gemini-text-secondary)]">{item.body}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
+                    {item.body}
+                  </p>
                 </div>
               </li>
             ))}
@@ -235,25 +252,29 @@ function FeaturesComparisonSection() {
     <section id="features" className="scroll-mt-20 bg-[var(--color-gemini-bg-soft)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-normal tracking-tight sm:text-4xl">
-            Local-first vs. typical cloud note tools
-          </h2>
-          <p className="mt-4 text-[var(--color-gemini-text-secondary)]">
+          <h2 className="gemini-section-heading">Local-first vs. typical cloud note tools</h2>
+          <p className="gemini-section-lead">
             Many meeting assistants process everything in the cloud. Record Plus trades that for
             control—without sacrificing AI-powered summaries on your own hardware.
           </p>
         </div>
-        <div className="gemini-card mt-10 overflow-hidden">
-          <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+
+        <ComparisonMobileList />
+
+        <div className="gemini-card mt-10 hidden overflow-hidden md:block">
+          <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--color-gemini-border)] bg-white">
-                <th scope="col" className="px-4 py-4 font-medium sm:px-6">
-                  {' '}
+                <th scope="col" className="w-[34%] px-6 py-4 font-medium text-[var(--color-gemini-text-muted)]">
+                  Topic
                 </th>
-                <th scope="col" className="px-4 py-4 font-medium text-[var(--color-gemini-blue)] sm:px-6">
+                <th
+                  scope="col"
+                  className="w-[33%] px-6 py-4 font-medium text-[var(--color-gemini-blue)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_40%,white)]"
+                >
                   Record Plus
                 </th>
-                <th scope="col" className="px-4 py-4 font-medium text-[var(--color-gemini-text-muted)] sm:px-6">
+                <th scope="col" className="w-[33%] px-6 py-4 font-medium text-[var(--color-gemini-text-muted)]">
                   Typical cloud assistant
                 </th>
               </tr>
@@ -263,28 +284,25 @@ function FeaturesComparisonSection() {
                 <tr key={row.aspect} className="border-b border-[var(--color-gemini-border)] last:border-0">
                   <th
                     scope="row"
-                    className="px-4 py-4 font-medium text-[var(--color-gemini-text-secondary)] sm:px-6"
+                    className="px-6 py-4 font-medium text-[var(--color-gemini-text-secondary)]"
                   >
                     {row.aspect}
                   </th>
-                  <td className="px-4 py-4 text-[var(--color-gemini-text)] sm:px-6">{row.recordPlus}</td>
-                  <td className="px-4 py-4 text-[var(--color-gemini-text-muted)] sm:px-6">
-                    {row.typicalCloud}
+                  <td className="px-6 py-4 text-[var(--color-gemini-text)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_22%,white)]">
+                    {row.recordPlus}
                   </td>
+                  <td className="px-6 py-4 text-[var(--color-gemini-text-muted)]">{row.typicalCloud}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <ul className="mt-10 grid gap-3 sm:grid-cols-3">
-          {[
-            'Menu bar recording with one click',
-            'Search across local transcripts',
-            'Export notes in standard formats',
-          ].map((feature) => (
+
+        <ul className="mt-10 grid gap-4 sm:grid-cols-3">
+          {quickFeatures.map((feature) => (
             <li
               key={feature}
-              className="gemini-card flex items-start gap-3 px-4 py-3 text-sm text-[var(--color-gemini-text-secondary)]"
+              className="gemini-card flex items-start gap-3 px-5 py-4 text-sm text-[var(--color-gemini-text-secondary)]"
             >
               <CheckIcon />
               {feature}
@@ -293,6 +311,34 @@ function FeaturesComparisonSection() {
         </ul>
       </div>
     </section>
+  )
+}
+
+function ComparisonMobileList() {
+  return (
+    <ul className="mt-10 space-y-4 md:hidden">
+      {comparisonRows.map((row) => (
+        <li key={row.aspect} className="gemini-card overflow-hidden">
+          <div className="border-b border-[var(--color-gemini-border)] bg-white px-4 py-3 text-sm font-medium text-[var(--color-gemini-text)]">
+            {row.aspect}
+          </div>
+          <div className="grid divide-y divide-[var(--color-gemini-border)]">
+            <div className="bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_30%,white)] px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-gemini-blue)]">
+                Record Plus
+              </p>
+              <p className="mt-1 text-sm text-[var(--color-gemini-text)]">{row.recordPlus}</p>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-gemini-text-muted)]">
+                Typical cloud assistant
+              </p>
+              <p className="mt-1 text-sm text-[var(--color-gemini-text-muted)]">{row.typicalCloud}</p>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -314,12 +360,18 @@ function DownloadSection() {
   return (
     <section id="download" className="scroll-mt-20 py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="gemini-card border-[var(--color-gemini-blue-soft)] bg-gradient-to-br from-white to-[var(--color-gemini-bg-soft)] px-6 py-12 text-center sm:px-12">
+        <div
+          className="gemini-card overflow-hidden px-6 py-12 text-center sm:px-12"
+          style={{
+            background:
+              'linear-gradient(145deg, #ffffff 0%, var(--color-gemini-bg-soft) 55%, color-mix(in srgb, var(--color-gemini-blue-soft) 35%, white) 100%)',
+          }}
+        >
           <GeminiMark size={40} className="mx-auto" />
-          <h2 className="mt-4 text-3xl font-normal tracking-tight">
+          <h2 className="mt-5 gemini-section-heading">
             Ready for <span className="gemini-gradient-text font-medium">private</span> meeting notes?
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[var(--color-gemini-text-secondary)]">
+          <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[var(--color-gemini-text-secondary)]">
             Download Record Plus for Mac, set up Ollama once, and keep every transcript on your machine.
             The .dmg installer will be available here when we ship.
           </p>
