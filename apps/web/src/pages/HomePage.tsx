@@ -32,7 +32,7 @@ const howItWorks = [
   {
     step: '1',
     title: 'Install Ollama',
-    body: 'Record Plus walks you through installing Ollama and pulling a speech or text model that fits your hardware.',
+    body: 'NoteStack walks you through installing Ollama and pulling a speech or text model that fits your hardware.',
   },
   {
     step: '2',
@@ -54,27 +54,27 @@ const howItWorks = [
 const comparisonRows = [
   {
     aspect: 'Where audio goes',
-    recordPlus: 'Stays on your Mac',
+    noteStack: 'Stays on your Mac',
     typicalCloud: 'Often uploaded for processing',
   },
   {
     aspect: 'Transcript storage',
-    recordPlus: 'Local files you own',
+    noteStack: 'Local files you own',
     typicalCloud: 'Vendor-hosted databases',
   },
   {
     aspect: 'AI processing',
-    recordPlus: 'Ollama on your hardware',
+    noteStack: 'Ollama on your hardware',
     typicalCloud: 'Remote API inference',
   },
   {
     aspect: 'Works offline',
-    recordPlus: 'Yes, after model setup',
+    noteStack: 'Yes, after model setup',
     typicalCloud: 'Usually requires connectivity',
   },
   {
     aspect: 'Data retention',
-    recordPlus: 'You delete when you want',
+    noteStack: 'You delete when you want',
     typicalCloud: 'Subject to provider policies',
   },
 ]
@@ -126,7 +126,7 @@ function HeroSection() {
             that never leave your Mac
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-[var(--color-gemini-text-secondary)] sm:text-xl">
-            Record Plus captures conversations, transcribes on device, and summarizes with{' '}
+            NoteStack captures conversations, transcribes on device, and summarizes with{' '}
             <strong className="font-medium text-[var(--color-gemini-text)]">Ollama</strong>—a
             Gemini-like experience powered entirely on your hardware.
           </p>
@@ -216,13 +216,13 @@ function HowItWorksSection() {
               How it works with <span className="gemini-gradient-text font-medium">Ollama</span>
             </h2>
             <p className="gemini-section-lead">
-              Ollama runs open models on your Mac. Record Plus connects to your local Ollama instance—not
+              Ollama runs open models on your Mac. NoteStack connects to your local Ollama instance—not
               a hosted API—so summaries stay on the same machine as your recordings.
             </p>
             <div className="gemini-card mt-8 border-[var(--color-gemini-blue-soft)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_35%,white)] p-6">
               <h3 className="font-medium text-[var(--color-gemini-blue)]">First-time onboarding</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
-                When you open Record Plus, we detect whether Ollama is installed. If not, you get
+                When you open NoteStack, we detect whether Ollama is installed. If not, you get
                 step-by-step guidance: install Ollama, pull a recommended model, and verify the
                 connection—usually under five minutes on Apple Silicon or Intel Macs.
               </p>
@@ -254,7 +254,7 @@ function FeaturesComparisonSection() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="gemini-section-heading">Local-first vs. typical cloud note tools</h2>
           <p className="gemini-section-lead">
-            Many meeting assistants process everything in the cloud. Record Plus trades that for
+            Many meeting assistants process everything in the cloud. NoteStack trades that for
             control—without sacrificing AI-powered summaries on your own hardware.
           </p>
         </div>
@@ -272,7 +272,7 @@ function FeaturesComparisonSection() {
                   scope="col"
                   className="w-[33%] px-6 py-4 font-medium text-[var(--color-gemini-blue)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_40%,white)]"
                 >
-                  Record Plus
+                  NoteStack
                 </th>
                 <th scope="col" className="w-[33%] px-6 py-4 font-medium text-[var(--color-gemini-text-muted)]">
                   Typical cloud assistant
@@ -289,7 +289,7 @@ function FeaturesComparisonSection() {
                     {row.aspect}
                   </th>
                   <td className="px-6 py-4 text-[var(--color-gemini-text)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_22%,white)]">
-                    {row.recordPlus}
+                    {row.noteStack}
                   </td>
                   <td className="px-6 py-4 text-[var(--color-gemini-text-muted)]">{row.typicalCloud}</td>
                 </tr>
@@ -325,9 +325,9 @@ function ComparisonMobileList() {
           <div className="grid divide-y divide-[var(--color-gemini-border)]">
             <div className="bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_30%,white)] px-4 py-3">
               <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-gemini-blue)]">
-                Record Plus
+                NoteStack
               </p>
-              <p className="mt-1 text-sm text-[var(--color-gemini-text)]">{row.recordPlus}</p>
+              <p className="mt-1 text-sm text-[var(--color-gemini-text)]">{row.noteStack}</p>
             </div>
             <div className="px-4 py-3">
               <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-gemini-text-muted)]">
@@ -372,7 +372,7 @@ function DownloadSection() {
             Ready for <span className="gemini-gradient-text font-medium">private</span> meeting notes?
           </h2>
           <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[var(--color-gemini-text-secondary)]">
-            Download Record Plus for Mac, set up Ollama once, and keep every transcript on your machine.
+            Download NoteStack for Mac, set up Ollama once, and keep every transcript on your machine.
             The .dmg installer will be available here when we ship.
           </p>
           <div className="mt-8">
