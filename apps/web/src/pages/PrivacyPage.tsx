@@ -28,7 +28,7 @@ export function PrivacyPage() {
           <section className="gemini-prose-section">
             <h2>Our approach</h2>
             <p className="mt-3 leading-relaxed text-[var(--color-gemini-text-secondary)]">
-              Record Plus is designed so your meeting audio and transcripts remain on your Mac. This
+              NoteStack is designed so your meeting audio and transcripts remain on your Mac. This
               policy describes what the app does locally, what this marketing website collects (if
               anything), and how we think about your data.
             </p>
@@ -39,7 +39,7 @@ export function PrivacyPage() {
             <ul className="mt-3 list-disc space-y-2 pl-5 leading-relaxed text-[var(--color-gemini-text-secondary)]">
               <li>
                 <strong className="text-[var(--color-gemini-text)]">Audio recordings</strong> are stored
-                on your device. Record Plus does not upload audio to Record Plus servers.
+                on your device. NoteStack does not upload audio to NoteStack servers.
               </li>
               <li>
                 <strong className="text-[var(--color-gemini-text)]">Transcripts and notes</strong> are
@@ -47,7 +47,7 @@ export function PrivacyPage() {
               </li>
               <li>
                 <strong className="text-[var(--color-gemini-text)]">AI processing</strong> uses Ollama on
-                your machine. Model inference runs locally; content is not sent to Record Plus for cloud
+                your machine. Model inference runs locally; content is not sent to NoteStack for cloud
                 LLM processing.
               </li>
             </ul>
@@ -57,7 +57,7 @@ export function PrivacyPage() {
             <h2>Ollama</h2>
             <p className="mt-3 leading-relaxed text-[var(--color-gemini-text-secondary)]">
               Ollama is a separate project you install and manage. When you pull models or update Ollama,
-              those actions follow Ollama&apos;s own terms and network behavior. Record Plus only
+              those actions follow Ollama&apos;s own terms and network behavior. NoteStack only
               communicates with your local Ollama instance (typically{' '}
               <code className="rounded-lg bg-[var(--color-gemini-chip)] px-1.5 py-0.5 text-sm text-[var(--color-gemini-blue)]">
                 localhost
@@ -88,8 +88,8 @@ export function PrivacyPage() {
             <h2>Contact</h2>
             <p className="mt-3 leading-relaxed text-[var(--color-gemini-text-secondary)]">
               Questions about privacy? Email{' '}
-              <a href="mailto:privacy@recordplus.app" className="gemini-text-link">
-                privacy@recordplus.app
+              <a href="mailto:privacy@notestack.fyi" className="gemini-text-link">
+                privacy@notestack.fyi
               </a>{' '}
               (placeholder).
             </p>

@@ -18,7 +18,7 @@ export function Header() {
         >
           <GeminiMark size={32} />
           <span className="truncate text-lg font-normal tracking-tight text-[var(--color-gemini-text)]">
-            Record <span className="gemini-gradient-text font-medium">Plus</span>
+            Note<span className="gemini-gradient-text font-medium">Stack</span>
           </span>
         </Link>
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">

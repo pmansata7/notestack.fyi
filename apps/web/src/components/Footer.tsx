@@ -20,7 +20,7 @@ export function Footer() {
           <div className="flex max-w-md items-start gap-3">
             <GeminiMark size={28} className="mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-[var(--color-gemini-text)]">Record Plus</p>
+              <p className="font-medium text-[var(--color-gemini-text)]">NoteStack</p>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-muted)]">
                 Local AI meeting notes. Your voice stays on your Mac—like Gemini, but entirely on-device.
               </p>
@@ -54,7 +54,7 @@ export function Footer() {
               </ul>
             </nav>
             <div className="text-sm text-[var(--color-gemini-text-muted)] sm:text-right">
-              <p>© {new Date().getFullYear()} Record Plus. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} NoteStack. All rights reserved.</p>
             </div>
           </div>
         </div>
