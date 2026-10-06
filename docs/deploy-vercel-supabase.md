@@ -40,8 +40,10 @@ The desktop app (`apps/desktop/`) stays local-first; only the public website use
 ## 2. Vercel project
 
 1. Import the GitHub repo at [vercel.com/new](https://vercel.com/new).
-2. **Root Directory**: `apps/web` (important for this monorepo).
-3. Framework preset: **Vite** (or leave on Auto; [`vercel.json`](../apps/web/vercel.json) sets build output).
+2. Leave **Root Directory** at the **repository root** (not `apps/web`). Root [`vercel.json`](../vercel.json) registers a single **web** service and routes all traffic to the marketing site.
+   - If Vercel suggests `desktop`, `src-tauri`, and `web`, **only deploy `web`**. The Mac app is built with Tauri locally/CI—not on Vercel.
+   - Alternative: set Root Directory to `apps/web` only (classic single-app project) and ignore multi-service detection.
+3. Framework preset: **Services** when prompted, or **Vite** for a single-app import.
 4. **Environment variables** (Production, Preview, and Development as needed):
 
 | Variable | Value |
