@@ -56,6 +56,12 @@ export interface OllamaStatus {
   message: string;
 }
 
+export interface OllamaPullProgress {
+  status: string;
+  completed?: number | null;
+  total?: number | null;
+}
+
 export const MEETING_TEMPLATES: { id: string; label: string }[] = [
   { id: "general", label: "General meeting" },
   { id: "one_on_one", label: "1:1" },
