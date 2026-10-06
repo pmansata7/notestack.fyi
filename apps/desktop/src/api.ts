@@ -79,6 +79,16 @@ export async function stripAudioAfterTranscribe(
   return invoke("strip_audio_after_transcribe", { transcript_id: transcriptId });
 }
 
+export async function transcribeRecordingAudio(
+  transcriptId: string,
+  model?: string,
+): Promise<Transcript> {
+  return invoke("transcribe_recording_audio", {
+    transcript_id: transcriptId,
+    model,
+  });
+}
+
 export async function ollamaCheckConnection(
   baseUrl?: string,
 ): Promise<OllamaStatus> {

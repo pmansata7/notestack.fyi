@@ -503,6 +503,52 @@ pub fn run_live_skill(args: LiveSkillArgs) -> Result<String, CommandError> {
 }
 
 #[tauri::command]
+pub fn transcribe_recording_audio(
+    transcript_id: String,
+    model: Option<String>,
+    state: State<Mutex<AppState>>,
+) -> Result<Transcript, CommandError> {
+    let state = state.lock().map_err(|_| "state lock failed")?;
+    let settings = AppSettings::load(&state.db);
+    let model = model
+        .filter(|m| !m.is_empty())
+        .unwrap_or_else(|| {
+            if settings.transcription_model.trim().is_empty() {
+                "whisper".to_string()
+            } else {
+                settings.transcription_model.clone()
+            }
+        });
+
+    let mut t = state
+        .db
+        .get_transcript(&transcript_id)
+        .map_err(map_err)?
+        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+
+    let path = t
+        .audio_path
+        .as_ref()
+        .ok_or_else(|| CommandError::from("no audio saved for this recording".into()))?;
+
+    let client = OllamaClient::new(Some(settings.ollama_base_url));
+    let text = client
+        .transcribe_audio_file(&model, std::path::Path::new(path))
+        .map_err(map_err)?;
+
+    if !text.trim().is_empty() {
+        if t.transcript_text.trim().is_empty() {
+            t.transcript_text = text;
+        } else {
+            t.transcript_text = format!("{}\n{}", t.transcript_text.trim(), text.trim());
+        }
+    }
+    t.updated_at = now_iso();
+    state.db.update_transcript(&t).map_err(map_err)?;
+    Ok(t)
+}
+
+#[tauri::command]
 pub fn strip_audio_after_transcribe(
     transcript_id: String,
     state: State<Mutex<AppState>>,

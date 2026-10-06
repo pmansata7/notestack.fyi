@@ -3,6 +3,7 @@ import {
   enhanceNotes,
   generateInstantSummary,
   generateNotes,
+  transcribeRecordingAudio,
   updateTranscript,
 } from "../api";
 import { GeminiMark } from "./GeminiMark";
@@ -13,6 +14,13 @@ import {
   type Transcript,
 } from "../types";
 
+interface ActiveRecordingProps {
+  liveText: string;
+  manualNotes: string;
+  onLiveTextChange: (v: string) => void;
+  onManualNotesChange: (v: string) => void;
+}
+
 interface Props {
   transcript: Transcript | null;
   settings: AppSettings;
@@ -20,6 +28,7 @@ interface Props {
   peekTranscriptId: string | null;
   onPeek: (id: string | null) => void;
   allTranscripts: Transcript[];
+  activeRecording?: ActiveRecordingProps;
 }
 
 function parseTasks(json: string): MeetingTask[] {
@@ -38,6 +47,7 @@ export function TranscriptDetail({
   peekTranscriptId,
   onPeek,
   allTranscripts,
+  activeRecording,
 }: Props) {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -55,6 +65,11 @@ export function TranscriptDetail({
 
   useEffect(() => {
     if (!transcript) return;
+    if (activeRecording) {
+      setText(activeRecording.liveText);
+      setManual(activeRecording.manualNotes);
+      return;
+    }
     setTitle(transcript.title);
     setText(transcript.transcript_text);
     setManual(transcript.manual_notes);
@@ -62,7 +77,13 @@ export function TranscriptDetail({
     setInstant(transcript.instant_summary);
     setTemplateId(transcript.template_id || "general");
     setMessage(null);
-  }, [transcript]);
+  }, [transcript, activeRecording]);
+
+  useEffect(() => {
+    if (!activeRecording) return;
+    setText(activeRecording.liveText);
+    setManual(activeRecording.manualNotes);
+  }, [activeRecording]);
 
   if (!transcript) {
     return (
@@ -123,6 +144,28 @@ export function TranscriptDetail({
       setAiAdditions(t.ai_additions);
       onUpdated(t);
       setMessage("Notes enhanced — your text stays black, AI in gray below.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const transcribeFromAudio = async () => {
+    if (!transcript.audio_path) {
+      setMessage("No audio file for this recording.");
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      const t = await transcribeRecordingAudio(
+        transcript.id,
+        settings.transcription_model,
+      );
+      setText(t.transcript_text);
+      onUpdated(t);
+      setMessage("Transcript generated from audio.");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
     } finally {
@@ -196,7 +239,10 @@ export function TranscriptDetail({
           rows={6}
           className="manual-notes"
           value={manual}
-          onChange={(e) => setManual(e.target.value)}
+          onChange={(e) => {
+            setManual(e.target.value);
+            activeRecording?.onManualNotesChange(e.target.value);
+          }}
           placeholder="Rough bullets — enhance after the call."
         />
       </label>
@@ -219,8 +265,15 @@ export function TranscriptDetail({
         <textarea
           rows={10}
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Live speech-to-text appears here when supported."
+          onChange={(e) => {
+            setText(e.target.value);
+            activeRecording?.onLiveTextChange(e.target.value);
+          }}
+          placeholder={
+            activeRecording
+              ? "Recording… live captions appear here when the browser supports them; otherwise transcribe after you stop."
+              : "Live speech-to-text appears here when supported, or use Transcribe from audio after recording."
+          }
         />
       </label>
 
@@ -236,6 +289,16 @@ export function TranscriptDetail({
       )}
 
       <div className="row">
+        {transcript.audio_path && !text.trim() && !activeRecording && (
+          <button
+            type="button"
+            className="secondary"
+            disabled={busy}
+            onClick={() => void transcribeFromAudio()}
+          >
+            Transcribe from audio
+          </button>
+        )}
         <button type="button" onClick={save} disabled={busy}>Save</button>
         <button type="button" className="secondary" onClick={enhance} disabled={busy}>
           Enhance notes
