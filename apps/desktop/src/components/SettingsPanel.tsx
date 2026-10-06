@@ -120,12 +120,13 @@ export function SettingsPanel({
           onChange={(e) =>
             setDraft({ ...draft, transcription_model: e.target.value })
           }
-          placeholder="whisper"
+          placeholder="gemma4:e4b"
         />
       </label>
       <p className="muted small">
         Powers live transcript (~10s) while recording and final transcription
-        when you stop. Required on the desktop app.
+        when you stop. Use an audio-capable Ollama model (e.g. gemma4:e4b), not
+        whisper — that name is not in the Ollama library.
       </p>
       <button
         type="button"
@@ -135,7 +136,7 @@ export function SettingsPanel({
           setBusy(true);
           setMessage(null);
           try {
-            const name = draft.transcription_model || "whisper";
+            const name = draft.transcription_model || "gemma4:e4b";
             const msg = await ollamaPullModel(name, draft.ollama_base_url);
             setMessage(msg || `Pulled ${name}`);
           } catch (e) {

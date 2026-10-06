@@ -18,6 +18,7 @@ import { formatInvokeError } from "../lib/errors";
 import {
   formatDiskGb,
   modelsForHardware,
+  DEFAULT_SPEECH_MODEL,
   TEXT_MODEL_OPTIONS,
   type TextModelOption,
 } from "../lib/modelRecommendations";
@@ -39,7 +40,6 @@ const STEPS = [
 ] as const;
 
 const DEFAULT_MODEL = "llama3.2";
-const DEFAULT_SPEECH_MODEL = "whisper";
 const PULL_PROGRESS_EVENT = "ollama-pull-progress";
 
 function formatElapsed(seconds: number): string {
@@ -567,12 +567,18 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           </p>
 
           <h3 className="onboarding-step-subtitle">Speech model (live + final transcript)</h3>
+          <p className="muted small">
+            Use an audio-capable Ollama model such as{" "}
+            <code>gemma4:e4b</code> (recommended on 8 GB+ RAM Macs) or{" "}
+            <code>gemma4:e2b</code> for smaller machines. There is no official{" "}
+            <code>whisper</code> model in Ollama.
+          </p>
           <label>
             Speech model name
             <input
               value={speechModel}
               onChange={(e) => setSpeechModel(e.target.value)}
-              placeholder="whisper"
+              placeholder={DEFAULT_SPEECH_MODEL}
               disabled={downloading}
             />
           </label>

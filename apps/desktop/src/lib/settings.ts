@@ -1,3 +1,7 @@
+import {
+  DEFAULT_SPEECH_MODEL,
+  LEGACY_SPEECH_MODEL,
+} from "./modelRecommendations";
 import type { AppSettings, CalendarEvent } from "../types";
 
 export function normalizeSettings(raw: AppSettings): AppSettings {
@@ -13,7 +17,11 @@ export function normalizeSettings(raw: AppSettings): AppSettings {
     default_template_id: raw.default_template_id || "general",
     calendar_events_json: raw.calendar_events_json || "[]",
     dictation_enabled: raw.dictation_enabled ?? false,
-    transcription_model: raw.transcription_model || "whisper",
+    transcription_model:
+      !raw.transcription_model ||
+      raw.transcription_model === LEGACY_SPEECH_MODEL
+        ? DEFAULT_SPEECH_MODEL
+        : raw.transcription_model,
     auto_transcribe_on_stop: raw.auto_transcribe_on_stop ?? true,
   };
 }

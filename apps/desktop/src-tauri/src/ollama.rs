@@ -4,6 +4,8 @@ use std::process::Command;
 use thiserror::Error;
 
 pub const DEFAULT_OLLAMA_URL: &str = "http://localhost:11434";
+/// Ollama model with native audio input (gemma4 E2B/E4B variants).
+pub const DEFAULT_TRANSCRIPTION_MODEL: &str = "gemma4:e4b";
 
 #[derive(Debug, Error)]
 pub enum OllamaError {
@@ -48,7 +50,7 @@ struct GenerateResponse {
 
 #[derive(Debug, Serialize)]
 struct PullRequest {
-    name: String,
+    model: String,
     stream: bool,
 }
 
@@ -61,11 +63,44 @@ pub struct PullProgress {
 
 #[derive(Debug, Deserialize)]
 struct PullStreamLine {
-    status: String,
+    #[serde(default)]
+    status: Option<String>,
+    #[serde(default)]
+    error: Option<String>,
     #[serde(default)]
     completed: Option<u64>,
     #[serde(default)]
     total: Option<u64>,
+}
+
+fn friendly_pull_error(error: &str) -> String {
+    let trimmed = error.trim();
+    if trimmed.is_empty() {
+        return "Model download failed.".into();
+    }
+    let lower = trimmed.to_ascii_lowercase();
+    if lower.contains("file does not exist")
+        || lower.contains("not found")
+        || lower.contains("invalid model")
+    {
+        return format!(
+            "{trimmed} There is no Ollama model named 'whisper'. For speech, use an audio-capable model such as gemma4:e4b (run: ollama pull gemma4:e4b).",
+            trimmed = trimmed
+        );
+    }
+    trimmed.to_string()
+}
+
+fn parse_pull_stream_line(line: &str) -> Result<Option<PullStreamLine>, OllamaError> {
+    let parsed: PullStreamLine = serde_json::from_str(line)
+        .map_err(|e| OllamaError::Api(e.to_string()))?;
+    if let Some(err) = parsed.error {
+        return Err(OllamaError::Api(friendly_pull_error(&err)));
+    }
+    if parsed.status.is_none() && parsed.completed.is_none() && parsed.total.is_none() {
+        return Ok(None);
+    }
+    Ok(Some(parsed))
 }
 
 #[derive(Debug, Deserialize)]
@@ -178,13 +213,20 @@ impl OllamaClient {
         let resp = pull_client
             .post(&url)
             .json(&PullRequest {
-                name: name.to_string(),
+                model: name.to_string(),
                 stream: true,
             })
             .send()
             .map_err(|e| OllamaError::Connection(e.to_string()))?;
         if !resp.status().is_success() {
-            return Err(OllamaError::Http(format!("status {}", resp.status())));
+            let status = resp.status();
+            let text = resp.text().unwrap_or_default();
+            if let Ok(parsed) = serde_json::from_str::<PullStreamLine>(&text) {
+                if let Some(err) = parsed.error {
+                    return Err(OllamaError::Api(friendly_pull_error(&err)));
+                }
+            }
+            return Err(OllamaError::Http(format!("status {} — {}", status, text)));
         }
         let reader = BufReader::new(resp);
         let mut last_status = String::from("download complete");
@@ -194,15 +236,20 @@ impl OllamaClient {
             if line.is_empty() {
                 continue;
             }
-            let parsed: PullStreamLine = serde_json::from_str(line)
-                .map_err(|e| OllamaError::Api(e.to_string()))?;
-            last_status = parsed.status.clone();
+            let Some(parsed) = parse_pull_stream_line(line)? else {
+                continue;
+            };
+            let status = parsed
+                .status
+                .clone()
+                .unwrap_or_else(|| "downloading".to_string());
+            last_status = status.clone();
             on_progress(PullProgress {
-                status: parsed.status.clone(),
+                status,
                 completed: parsed.completed,
                 total: parsed.total,
             });
-            if parsed.status == "success" {
+            if last_status == "success" {
                 break;
             }
         }
@@ -649,7 +696,30 @@ fn parse_transcription_response(body: &str) -> Result<String, OllamaError> {
 
 #[cfg(test)]
 mod pull_message_tests {
-    use super::{display_model_name, friendly_pull_message};
+    use super::{display_model_name, friendly_pull_message, parse_pull_stream_line};
+
+    #[test]
+    fn pull_error_line_returns_actionable_message() {
+        let err = parse_pull_stream_line(r#"{"error":"pull model manifest: file does not exist"}"#)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("gemma4:e4b"));
+        assert!(!err.contains("missing field"));
+    }
+
+    #[test]
+    fn pull_progress_line_without_status_is_skipped() {
+        let parsed = parse_pull_stream_line(r#"{"completed":10,"total":100}"#).unwrap();
+        assert!(parsed.is_none());
+    }
+
+    #[test]
+    fn pull_status_line_parses() {
+        let parsed = parse_pull_stream_line(r#"{"status":"pulling manifest"}"#)
+            .unwrap()
+            .expect("line");
+        assert_eq!(parsed.status.as_deref(), Some("pulling manifest"));
+    }
 
     #[test]
     fn success_json_becomes_friendly_message() {

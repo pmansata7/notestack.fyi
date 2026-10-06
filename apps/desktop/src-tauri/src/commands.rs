@@ -623,7 +623,7 @@ pub fn transcribe_audio_base64(
         .filter(|m| !m.is_empty())
         .unwrap_or_else(|| {
             if settings.transcription_model.trim().is_empty() {
-                "whisper".to_string()
+                crate::ollama::DEFAULT_TRANSCRIPTION_MODEL.to_string()
             } else {
                 settings.transcription_model.clone()
             }
@@ -651,7 +651,7 @@ pub fn transcribe_recording_audio(
         .filter(|m| !m.is_empty())
         .unwrap_or_else(|| {
             if settings.transcription_model.trim().is_empty() {
-                "whisper".to_string()
+                crate::ollama::DEFAULT_TRANSCRIPTION_MODEL.to_string()
             } else {
                 settings.transcription_model.clone()
             }

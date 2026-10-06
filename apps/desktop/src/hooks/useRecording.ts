@@ -135,7 +135,7 @@ export function useRecording(
         msg.toLowerCase().includes("model")
       ) {
         setError(
-          `Live transcription needs a speech model. Run ollama pull ${settingsRef.current.transcription_model || "whisper"} in Terminal, or change Settings → Transcription model.`,
+          `Live transcription needs a speech model. Run ollama pull ${settingsRef.current.transcription_model || "gemma4:e4b"} in Terminal, or change Settings → Transcription model.`,
         );
       }
     } finally {
@@ -279,7 +279,7 @@ export function useRecording(
         const msg =
           e instanceof Error ? e.message : "Transcription failed";
         setError(
-          `${msg}. Install an Ollama speech model (e.g. ollama pull whisper) and check Settings.`,
+          `${msg}. Install an Ollama speech model (e.g. ollama pull gemma4:e4b) and check Settings.`,
         );
       } finally {
         setTranscribing(false);

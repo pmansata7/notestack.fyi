@@ -30,7 +30,7 @@ pub struct AppSettings {
     pub default_template_id: String,
     pub calendar_events_json: String,
     pub dictation_enabled: bool,
-    /// Ollama model for speech-to-text (e.g. whisper, gemma4:e4b). Empty uses whisper.
+    /// Ollama model for speech-to-text (e.g. gemma4:e4b). Empty uses DEFAULT_TRANSCRIPTION_MODEL.
     pub transcription_model: String,
     pub auto_transcribe_on_stop: bool,
 }
@@ -49,7 +49,7 @@ impl Default for AppSettings {
             default_template_id: "general".to_string(),
             calendar_events_json: "[]".to_string(),
             dictation_enabled: false,
-            transcription_model: "whisper".to_string(),
+            transcription_model: crate::ollama::DEFAULT_TRANSCRIPTION_MODEL.to_string(),
             auto_transcribe_on_stop: true,
         }
     }

@@ -80,7 +80,7 @@ function App() {
     default_template_id: "general",
     calendar_events_json: "[]",
     dictation_enabled: false,
-    transcription_model: "whisper",
+    transcription_model: "gemma4:e4b",
     auto_transcribe_on_stop: true,
   });
 
@@ -268,7 +268,7 @@ function App() {
               <p className="muted small">
                 {recording.liveOllamaBusy
                   ? "Updating live transcript with Ollama…"
-                  : "Live transcript via Ollama (every ~10s). Needs a speech model — ollama pull whisper."}
+                  : "Live transcript via Ollama (every ~10s). Needs a speech model — ollama pull gemma4:e4b."}
               </p>
             )}
             {recording.recording && recording.liveSttMode === "none" && (
