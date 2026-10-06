@@ -18,11 +18,9 @@ impl From<String> for CommandError {
     }
 }
 
-impl From<&str> for CommandError {
-    fn from(message: &str) -> Self {
-        Self {
-            message: message.to_string(),
-        }
+fn command_err(message: &str) -> CommandError {
+    CommandError {
+        message: message.to_string(),
     }
 }
 
@@ -34,7 +32,7 @@ fn map_err(e: impl std::fmt::Display) -> CommandError {
 
 #[tauri::command]
 pub fn get_settings(state: State<Mutex<AppState>>) -> Result<AppSettings, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     Ok(AppSettings::load(&state.db))
 }
 
@@ -43,14 +41,14 @@ pub fn save_settings(
     settings: AppSettings,
     state: State<Mutex<AppState>>,
 ) -> Result<(), CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     settings.save(&state.db).map_err(map_err)?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn get_data_dir(state: State<Mutex<AppState>>) -> Result<String, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     Ok(state.db.recordings_dir().parent().unwrap().to_string_lossy().to_string())
 }
 
@@ -59,7 +57,7 @@ pub fn list_transcripts(
     include_deleted: Option<bool>,
     state: State<Mutex<AppState>>,
 ) -> Result<Vec<Transcript>, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     state
         .db
         .list_transcripts(include_deleted.unwrap_or(false))
@@ -71,18 +69,18 @@ pub fn search_transcripts(
     query: String,
     state: State<Mutex<AppState>>,
 ) -> Result<Vec<Transcript>, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     state.db.search_transcripts(&query).map_err(map_err)
 }
 
 #[tauri::command]
 pub fn get_transcript(id: String, state: State<Mutex<AppState>>) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     state
         .db
         .get_transcript(&id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))
+        .ok_or_else(|| command_err("transcript not found"))
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,7 +94,7 @@ pub fn create_transcript(
     args: CreateTranscriptArgs,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let now = now_iso();
     let settings = AppSettings::load(&state.db);
     let t = Transcript {
@@ -152,12 +150,12 @@ pub fn update_transcript(
     args: UpdateTranscriptArgs,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let mut t = state
         .db
         .get_transcript(&args.id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
     if let Some(title) = args.title {
         t.title = title;
     }
@@ -192,21 +190,21 @@ pub fn update_transcript(
 
 #[tauri::command]
 pub fn delete_transcript(id: String, state: State<Mutex<AppState>>) -> Result<(), CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     state.db.soft_delete_transcript(&id).map_err(map_err)?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn restore_transcript(id: String, state: State<Mutex<AppState>>) -> Result<(), CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     state.db.restore_transcript(&id).map_err(map_err)?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn purge_transcript(id: String, state: State<Mutex<AppState>>) -> Result<(), CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     if let Some(t) = state.db.get_transcript(&id).map_err(map_err)? {
         if let Some(path) = t.audio_path {
             let _ = std::fs::remove_file(path);
@@ -228,12 +226,12 @@ pub fn save_recording_audio(
     args: SaveAudioArgs,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let mut t = state
         .db
         .get_transcript(&args.transcript_id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
 
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(args.audio_base64.trim())
@@ -301,7 +299,7 @@ pub fn generate_notes_from_transcript(
     model: Option<String>,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = model
         .filter(|m| !m.is_empty())
@@ -311,12 +309,10 @@ pub fn generate_notes_from_transcript(
         .db
         .get_transcript(&transcript_id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
 
     if t.transcript_text.trim().is_empty() {
-        return Err(CommandError::from(
-            "Add transcript text before generating notes".into(),
-        ));
+        return Err(command_err("Add transcript text before generating notes"));
     }
 
     let client = OllamaClient::new(Some(settings.ollama_base_url));
@@ -353,7 +349,7 @@ pub fn enhance_notes_for_transcript(
     model: Option<String>,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = model
         .filter(|m| !m.is_empty())
@@ -363,12 +359,10 @@ pub fn enhance_notes_for_transcript(
         .db
         .get_transcript(&transcript_id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
 
     if t.transcript_text.trim().is_empty() && t.manual_notes.trim().is_empty() {
-        return Err(CommandError::from(
-            "Add a transcript or manual notes before enhancing".into(),
-        ));
+        return Err(command_err("Add a transcript or manual notes before enhancing"));
     }
 
     let template_label = t.template_id.replace('_', " ");
@@ -397,7 +391,7 @@ pub fn generate_instant_summary(
     model: Option<String>,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = model
         .filter(|m| !m.is_empty())
@@ -407,10 +401,10 @@ pub fn generate_instant_summary(
         .db
         .get_transcript(&transcript_id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
 
     if t.transcript_text.trim().is_empty() {
-        return Err(CommandError::from("Add transcript text first".into()));
+        return Err(command_err("Add transcript text first"));
     }
 
     let client = OllamaClient::new(Some(settings.ollama_base_url));
@@ -433,7 +427,7 @@ pub fn ask_across_meetings(
     args: AskMeetingsArgs,
     state: State<Mutex<AppState>>,
 ) -> Result<String, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = args
         .model
@@ -452,7 +446,7 @@ pub fn generate_daily_digest(
     model: Option<String>,
     state: State<Mutex<AppState>>,
 ) -> Result<String, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = model
         .filter(|m| !m.is_empty())
@@ -475,7 +469,7 @@ pub fn generate_meeting_prep(
     args: MeetingPrepArgs,
     state: State<Mutex<AppState>>,
 ) -> Result<String, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = args
         .model
@@ -514,7 +508,7 @@ pub fn transcribe_recording_audio(
     model: Option<String>,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = model
         .filter(|m| !m.is_empty())
@@ -530,12 +524,12 @@ pub fn transcribe_recording_audio(
         .db
         .get_transcript(&transcript_id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
 
     let path = t
         .audio_path
         .as_ref()
-        .ok_or_else(|| CommandError::from("no audio saved for this recording".into()))?;
+        .ok_or_else(|| command_err("no audio saved for this recording"))?;
 
     let client = OllamaClient::new(Some(settings.ollama_base_url));
     let text = client
@@ -559,12 +553,12 @@ pub fn strip_audio_after_transcribe(
     transcript_id: String,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let mut t = state
         .db
         .get_transcript(&transcript_id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
     if let Some(path) = t.audio_path.clone() {
         let _ = std::fs::remove_file(path);
         t.audio_path = None;

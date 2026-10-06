@@ -1,13 +1,13 @@
 # NoteStack (`notestack.fyi`)
 
-**NoteStack** is the home for **Record Plus** — a privacy-first, local-first meeting notes stack. Record voice, keep transcripts on your device, and summarize with **Ollama** on `localhost` (no cloud required for core workflows).
+**NoteStack** is a privacy-first, local-first meeting notes stack. Record voice, keep transcripts on your device, and summarize with **Ollama** on `localhost` (no cloud required for core workflows).
 
 ## Monorepo
 
 | Path | Description |
 |------|-------------|
-| [`apps/web/`](apps/web/) | **Record Plus** marketing site — Vite + React static site for [notestack.fyi](https://notestack.fyi) |
-| [`apps/desktop/`](apps/desktop/) | **Record Plus** — Tauri 2 + React macOS desktop app (recording, transcripts, Ollama onboarding, meeting notes) |
+| [`apps/web/`](apps/web/) | **NoteStack** marketing site — Vite + React static site for [notestack.fyi](https://notestack.fyi) |
+| [`apps/desktop/`](apps/desktop/) | **NoteStack** — Tauri 2 + React macOS desktop app (recording, transcripts, Ollama onboarding, meeting notes) |
 
 ## Quick start (web)
 
@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-See [apps/web/README.md](apps/web/README.md) for build and deploy notes.
+See [apps/web/README.md](apps/web/README.md) for build notes and [docs/deploy-vercel-supabase.md](docs/deploy-vercel-supabase.md) for **Vercel + Supabase** hosting.
 
 ## Quick start (desktop)
 

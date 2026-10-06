@@ -127,7 +127,7 @@ function App() {
       <div className="app loading">
         <div className="loading-shell">
           <GeminiMark size={40} />
-          <p className="muted">Loading Record Plus…</p>
+          <p className="muted">Loading NoteStack…</p>
         </div>
       </div>
     );
@@ -160,7 +160,7 @@ function App() {
         <div className="brand">
           <GeminiMark size={28} />
           <span>
-            Record <span className="brand-plus">Plus</span>
+            Note<span className="brand-plus">Stack</span>
           </span>
           {recording.recording && (
             <span className="recording-pill">Recording {formatElapsed(recording.elapsedMs)}</span>

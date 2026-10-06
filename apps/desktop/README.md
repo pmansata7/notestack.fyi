@@ -1,4 +1,4 @@
-# Record Plus
+# NoteStack
 
 Local-first meeting recorder for macOS (Tauri 2 + React). Capture microphone audio, store transcripts and recordings on disk, and generate meeting notes with [Ollama](https://ollama.com) on `localhost:11434`.
 
@@ -12,7 +12,7 @@ Desktop parity with **Fireflies** and **Granola** (local-first) — see [docs/de
 - **Ask across meetings** — chat over local history
 - **Search**, **trash/restore**, meeting **templates**, calendar reminders (local events)
 - **Dictation** (Fireflies Talk–style) — hold Fn / Ctrl+Win, copies to clipboard
-- SQLite + audio under `~/Library/Application Support/Record Plus/`
+- SQLite + audio under `~/Library/Application Support/NoteStack/`
 - **Ollama onboarding wizard** and all AI via `localhost` Ollama
 
 ## Prerequisites (macOS)
@@ -54,12 +54,12 @@ The Vite dev server runs on port **1420**; Tauri opens the desktop window.
 
 | Path | Purpose |
 |------|---------|
-| `~/Library/Application Support/Record Plus/record-plus.db` | SQLite: transcripts, settings |
-| `~/Library/Application Support/Record Plus/recordings/` | Audio files (`{id}.webm`) |
+| `~/Library/Application Support/NoteStack/notestack.db` | SQLite: transcripts, settings |
+| `~/Library/Application Support/NoteStack/recordings/` | Audio files (`{id}.webm`) |
 
 ## Architecture
 
-High-level design is documented in the Record App project store at `docs/desktop-app.md` (Tauri commands, SQLite schema, Ollama flow).
+High-level design is documented in the NoteStack project store at `docs/desktop-app.md` (Tauri commands, SQLite schema, Ollama flow).
 
 Rust modules: `db`, `ollama`, `commands`, `state`. React: `OnboardingWizard`, `SettingsPanel`, `TranscriptList`, `TranscriptDetail`, `useRecording`.
 

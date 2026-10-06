@@ -40,8 +40,14 @@ impl Database {
     pub fn open(data_dir: PathBuf) -> Result<Self, DbError> {
         std::fs::create_dir_all(&data_dir)?;
         std::fs::create_dir_all(data_dir.join("recordings"))?;
-        let db_path = data_dir.join("record-plus.db");
-        let conn = Connection::open(db_path)?;
+        let db_path = data_dir.join("notestack.db");
+        if !db_path.exists() {
+            let legacy_db = data_dir.join("record-plus.db");
+            if legacy_db.is_file() {
+                let _ = std::fs::rename(&legacy_db, &db_path);
+            }
+        }
+        let conn = Connection::open(&db_path)?;
         conn.execute_batch(
             "
             CREATE TABLE IF NOT EXISTS transcripts (
@@ -232,7 +238,7 @@ fn migrate_transcripts_schema(conn: &Connection) -> Result<(), DbError> {
         .query_map([], |row| row.get::<_, String>(1))?
         .filter_map(|r| r.ok())
         .collect();
-    let mut add = |name: &str, ddl: &str| -> Result<(), DbError> {
+    let add = |name: &str, ddl: &str| -> Result<(), DbError> {
         if !columns.iter().any(|c| c == name) {
             conn.execute_batch(ddl)?;
         }
