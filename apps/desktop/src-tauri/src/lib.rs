@@ -14,12 +14,14 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(Mutex::new(AppState { db: database }))
         .invoke_handler(tauri::generate_handler![
             commands::get_settings,
             commands::save_settings,
             commands::get_data_dir,
             commands::get_hardware_hints,
+            commands::set_storage_directory,
             commands::list_transcripts,
             commands::search_transcripts,
             commands::get_transcript,
@@ -37,6 +39,8 @@ pub fn run() {
             commands::run_live_skill,
             commands::strip_audio_after_transcribe,
             commands::transcribe_recording_audio,
+            commands::ollama_is_installed,
+            commands::ollama_install,
             commands::ollama_check_connection,
             commands::ollama_list_models,
             commands::ollama_pull_model,
