@@ -126,7 +126,7 @@ impl OllamaClient {
     pub fn test_model(&self, model: &str) -> Result<String, OllamaError> {
         self.generate(
             model,
-            "Reply with exactly: Record Plus connection OK",
+            "Reply with exactly: NoteStack connection OK",
         )
     }
 

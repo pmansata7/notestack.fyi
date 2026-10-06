@@ -166,11 +166,19 @@ impl AppSettings {
     }
 }
 
+const APP_DATA_DIR_NAME: &str = "NoteStack";
+const LEGACY_APP_DATA_DIR_NAME: &str = "Record Plus";
+
 pub fn app_data_dir() -> PathBuf {
-    if let Some(dir) = dirs_data_local() {
-        return dir.join("Record Plus");
+    if let Some(parent) = dirs_data_local() {
+        let new_dir = parent.join(APP_DATA_DIR_NAME);
+        let legacy_dir = parent.join(LEGACY_APP_DATA_DIR_NAME);
+        if !new_dir.exists() && legacy_dir.is_dir() {
+            let _ = std::fs::rename(&legacy_dir, &new_dir);
+        }
+        return new_dir;
     }
-    std::env::temp_dir().join("record-plus")
+    std::env::temp_dir().join("notestack")
 }
 
 fn dirs_data_local() -> Option<PathBuf> {
