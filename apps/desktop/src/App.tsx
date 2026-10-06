@@ -266,13 +266,19 @@ function App() {
             {recording.error && (
               <p className="error">{recording.error}</p>
             )}
-            {recording.recording &&
-              recording.liveSttAvailable === false && (
-                <p className="muted small">
-                  Live captions aren&apos;t available in this window; audio is
-                  recorded and transcribed when you stop (via Ollama).
-                </p>
-              )}
+            {recording.recording && recording.liveSttMode === "ollama" && (
+              <p className="muted small">
+                {recording.liveOllamaBusy
+                  ? "Updating live transcript with Ollama…"
+                  : "Live transcript via Ollama (every ~10s). Needs a speech model — ollama pull whisper."}
+              </p>
+            )}
+            {recording.recording && recording.liveSttMode === "none" && (
+              <p className="muted small">
+                Recording audio. Enable &quot;Transcribe audio with Ollama when
+                recording stops&quot; in Settings for live + final transcripts.
+              </p>
+            )}
             <TranscriptList
               items={transcripts}
               selectedId={selectedId}

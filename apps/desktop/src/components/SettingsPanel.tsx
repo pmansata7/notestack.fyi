@@ -3,6 +3,7 @@ import {
   getDataDir,
   ollamaCheckConnection,
   ollamaListModels,
+  ollamaPullModel,
   saveSettings,
 } from "../api";
 import { MEETING_TEMPLATES } from "../types";
@@ -97,10 +98,29 @@ export function SettingsPanel({
         />
       </label>
       <p className="muted small">
-        Used after recording when live captions are unavailable. Run{" "}
-        <code>ollama pull whisper</code> (or an audio-capable model like{" "}
-        <code>gemma4:e4b</code>).
+        Powers live transcript (~10s) while recording and final transcription
+        when you stop. Required on the desktop app.
       </p>
+      <button
+        type="button"
+        className="secondary"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setMessage(null);
+          try {
+            const name = draft.transcription_model || "whisper";
+            const msg = await ollamaPullModel(name, draft.ollama_base_url);
+            setMessage(msg || `Pulled ${name}`);
+          } catch (e) {
+            setMessage(e instanceof Error ? e.message : String(e));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        Pull speech model in Ollama
+      </button>
 
       <h3>Meeting capture (Granola / Fireflies parity)</h3>
       <label className="check">
@@ -109,7 +129,7 @@ export function SettingsPanel({
           checked={draft.auto_transcribe_on_stop}
           onChange={() => toggle("auto_transcribe_on_stop")}
         />
-        Transcribe audio with Ollama when recording stops
+        Transcribe with Ollama (live while recording + when you stop)
       </label>
       <label className="check">
         <input

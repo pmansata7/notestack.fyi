@@ -35,6 +35,7 @@ pub fn run() {
             commands::run_live_skill,
             commands::strip_audio_after_transcribe,
             commands::transcribe_recording_audio,
+            commands::transcribe_audio_base64,
             commands::ollama_check_connection,
             commands::ollama_list_models,
             commands::ollama_pull_model,

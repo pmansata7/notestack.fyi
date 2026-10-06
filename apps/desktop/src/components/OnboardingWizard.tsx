@@ -14,11 +14,12 @@ const STEPS = [
   "Welcome",
   "Install Ollama",
   "Connect",
-  "Pull model",
+  "Pull models",
   "Test & finish",
 ] as const;
 
 const DEFAULT_MODEL = "llama3.2";
+const DEFAULT_SPEECH_MODEL = "whisper";
 
 interface Props {
   settings: AppSettings;
@@ -29,6 +30,9 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [baseUrl, setBaseUrl] = useState(settings.ollama_base_url);
   const [model, setModel] = useState(settings.default_model || DEFAULT_MODEL);
+  const [speechModel, setSpeechModel] = useState(
+    settings.transcription_model || DEFAULT_SPEECH_MODEL,
+  );
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [models, setModels] = useState<OllamaModel[]>([]);
@@ -36,6 +40,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   useEffect(() => {
     setBaseUrl(settings.ollama_base_url);
     setModel(settings.default_model || DEFAULT_MODEL);
+    setSpeechModel(settings.transcription_model || DEFAULT_SPEECH_MODEL);
   }, [settings]);
 
   const checkConnection = async () => {
@@ -53,12 +58,12 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     }
   };
 
-  const pullModel = async () => {
+  const pullModel = async (name: string, label: string) => {
     setBusy(true);
-    setStatus("Pulling model (this may take several minutes)…");
+    setStatus(`Pulling ${label} (this may take several minutes)…`);
     try {
-      const msg = await ollamaPullModel(model, baseUrl);
-      setStatus(msg || `Pulled ${model}`);
+      const msg = await ollamaPullModel(name, baseUrl);
+      setStatus(msg || `Pulled ${name}`);
       const list = await ollamaListModels(baseUrl);
       setModels(list);
     } catch (e) {
@@ -78,6 +83,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
         ...settings,
         ollama_base_url: baseUrl,
         default_model: model,
+        transcription_model: speechModel,
         onboarding_complete: true,
       });
       await saveSettings(next);
@@ -109,8 +115,9 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       {step === 0 && (
         <section>
           <p>
-            This wizard helps you install Ollama, pull a text model for summaries,
-            and verify everything works before you record.
+            This wizard helps you install Ollama, pull models for live
+            transcription and summaries, and verify everything works before you
+            record.
           </p>
           <button type="button" onClick={() => setStep(1)}>Get started</button>
         </section>
@@ -159,12 +166,36 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
       {step === 3 && (
         <section>
+          <p className="muted">
+            NoteStack records WAV audio and transcribes with Ollama on your Mac
+            (live every ~10s while recording, then a final pass when you stop).
+          </p>
           <label>
-            Model to pull & use (e.g. llama3.2)
+            Speech model (live + final transcript)
+            <input
+              value={speechModel}
+              onChange={(e) => setSpeechModel(e.target.value)}
+              placeholder="whisper"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void pullModel(speechModel, "speech model")}
+            disabled={busy}
+          >
+            Pull speech model
+          </button>
+          <label>
+            Text model for summaries (e.g. llama3.2)
             <input value={model} onChange={(e) => setModel(e.target.value)} />
           </label>
-          <button type="button" onClick={pullModel} disabled={busy}>
-            Pull model
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void pullModel(model, "text model")}
+            disabled={busy}
+          >
+            Pull text model
           </button>
           {models.length > 0 && (
             <p className="muted">Installed: {models.map((m) => m.name).join(", ")}</p>
