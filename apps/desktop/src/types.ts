@@ -41,6 +41,8 @@ export interface AppSettings {
   default_template_id: string;
   calendar_events_json: string;
   dictation_enabled: boolean;
+  transcription_model: string;
+  auto_transcribe_on_stop: boolean;
 }
 
 export interface OllamaModel {

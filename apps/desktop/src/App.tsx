@@ -79,6 +79,8 @@ function App() {
     default_template_id: "general",
     calendar_events_json: "[]",
     dictation_enabled: false,
+    transcription_model: "whisper",
+    auto_transcribe_on_stop: true,
   });
 
   const recording = useRecording(effectiveSettings, onSaved);
@@ -224,7 +226,9 @@ function App() {
             onSaveSettings={(s) => void persistSettings(s)}
             onStartRecordingForEvent={(title) => {
               setView("main");
-              void recording.start(title);
+              void recording.start(title).then((id) => {
+                if (id) setSelectedId(id);
+              });
             }}
           />
         </main>
@@ -239,7 +243,9 @@ function App() {
                   className="record-btn"
                   onClick={() => {
                     setPaneHidden(false);
-                    void recording.start();
+                    void recording.start().then((id) => {
+                      if (id) setSelectedId(id);
+                    });
                   }}
                 >
                   Take notes (no bot)
@@ -254,9 +260,19 @@ function App() {
                 </button>
               )}
             </div>
+            {recording.transcribing && (
+              <p className="status">Transcribing with Ollama…</p>
+            )}
             {recording.error && (
               <p className="error">{recording.error}</p>
             )}
+            {recording.recording &&
+              recording.liveSttAvailable === false && (
+                <p className="muted small">
+                  Live captions aren&apos;t available in this window; audio is
+                  recorded and transcribed when you stop (via Ollama).
+                </p>
+              )}
             <TranscriptList
               items={transcripts}
               selectedId={selectedId}
@@ -273,6 +289,18 @@ function App() {
               allTranscripts={transcripts}
               peekTranscriptId={peekId}
               onPeek={setPeekId}
+              activeRecording={
+                recording.recording &&
+                selected &&
+                recording.currentId === selected.id
+                  ? {
+                      liveText: recording.liveText,
+                      manualNotes: recording.manualNotes,
+                      onLiveTextChange: recording.setLiveText,
+                      onManualNotesChange: recording.setManualNotes,
+                    }
+                  : undefined
+              }
               onUpdated={(t) => {
                 setTranscripts((prev) =>
                   prev.map((x) => (x.id === t.id ? t : x)),

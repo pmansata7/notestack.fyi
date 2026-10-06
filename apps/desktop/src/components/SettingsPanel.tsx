@@ -86,8 +86,31 @@ export function SettingsPanel({
           }
         />
       </label>
+      <label>
+        Transcription model (Ollama)
+        <input
+          value={draft.transcription_model}
+          onChange={(e) =>
+            setDraft({ ...draft, transcription_model: e.target.value })
+          }
+          placeholder="whisper"
+        />
+      </label>
+      <p className="muted small">
+        Used after recording when live captions are unavailable. Run{" "}
+        <code>ollama pull whisper</code> (or an audio-capable model like{" "}
+        <code>gemma4:e4b</code>).
+      </p>
 
       <h3>Meeting capture (Granola / Fireflies parity)</h3>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={draft.auto_transcribe_on_stop}
+          onChange={() => toggle("auto_transcribe_on_stop")}
+        />
+        Transcribe audio with Ollama when recording stops
+      </label>
       <label className="check">
         <input
           type="checkbox"

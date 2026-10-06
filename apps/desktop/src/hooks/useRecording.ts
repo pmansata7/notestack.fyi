@@ -5,6 +5,7 @@ import {
   generateInstantSummary,
   saveRecordingAudio,
   stripAudioAfterTranscribe,
+  transcribeRecordingAudio,
   updateTranscript,
 } from "../api";
 import type { AppSettings, Transcript } from "../types";
@@ -40,6 +41,10 @@ export function useRecording(
   const [error, setError] = useState<string | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [pendingTitle, setPendingTitle] = useState<string | undefined>();
+  const [transcribing, setTranscribing] = useState(false);
+  const [liveSttAvailable, setLiveSttAvailable] = useState<boolean | null>(
+    null,
+  );
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -69,7 +74,7 @@ export function useRecording(
     }
   };
 
-  const start = useCallback(async (title?: string) => {
+  const start = useCallback(async (title?: string): Promise<string | null> => {
     setError(null);
     setLiveText("");
     setManualNotes("");
@@ -95,6 +100,7 @@ export function useRecording(
       recorder.start(1000);
 
       const SpeechRecognition = getSpeechRecognition();
+      setLiveSttAvailable(!!SpeechRecognition);
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
@@ -130,10 +136,12 @@ export function useRecording(
         setElapsedMs(Date.now() - startRef.current);
       }, 250);
       setRecording(true);
+      return transcript.id;
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Microphone access failed",
       );
+      return null;
     }
   }, []);
 
@@ -170,7 +178,33 @@ export function useRecording(
     });
     updated = await saveRecordingAudio(transcript.id, base64, ext);
 
-    if (settings.auto_instant_summary && text) {
+    const shouldTranscribe =
+      settings.auto_transcribe_on_stop &&
+      blob.size > 0 &&
+      (!text || liveSttAvailable === false);
+    if (shouldTranscribe) {
+      setTranscribing(true);
+      try {
+        updated = await transcribeRecordingAudio(
+          transcript.id,
+          settings.transcription_model,
+        );
+        liveTextRef.current = updated.transcript_text;
+        setLiveText(updated.transcript_text);
+      } catch (e) {
+        const msg =
+          e instanceof Error ? e.message : "Transcription failed";
+        setError(
+          `${msg}. Install an Ollama speech model (e.g. ollama pull whisper) and check Settings.`,
+        );
+      } finally {
+        setTranscribing(false);
+      }
+    }
+
+    const finalText = updated.transcript_text.trim();
+
+    if (settings.auto_instant_summary && finalText) {
       try {
         updated = await generateInstantSummary(
           transcript.id,
@@ -181,7 +215,7 @@ export function useRecording(
       }
     }
 
-    if (settings.auto_enhance_on_stop && (text || notes)) {
+    if (settings.auto_enhance_on_stop && (finalText || notes)) {
       try {
         updated = await enhanceNotes(transcript.id, settings.default_model);
       } catch {
@@ -217,6 +251,7 @@ export function useRecording(
 
   return {
     recording,
+    transcribing,
     elapsedMs,
     liveText,
     setLiveText: setLiveTextTracked,
@@ -224,6 +259,7 @@ export function useRecording(
     setManualNotes: setManualNotesTracked,
     error,
     currentId,
+    liveSttAvailable,
     start,
     stop,
   };

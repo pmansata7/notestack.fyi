@@ -13,6 +13,8 @@ export function normalizeSettings(raw: AppSettings): AppSettings {
     default_template_id: raw.default_template_id || "general",
     calendar_events_json: raw.calendar_events_json || "[]",
     dictation_enabled: raw.dictation_enabled ?? false,
+    transcription_model: raw.transcription_model || "whisper",
+    auto_transcribe_on_stop: raw.auto_transcribe_on_stop ?? true,
   };
 }
 

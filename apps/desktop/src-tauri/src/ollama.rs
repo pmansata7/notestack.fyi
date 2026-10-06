@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use thiserror::Error;
 
 pub const DEFAULT_OLLAMA_URL: &str = "http://localhost:11434";
@@ -241,6 +242,49 @@ impl OllamaClient {
         self.generate(model, &prompt)
     }
 
+    /// Transcribe audio via Ollama's OpenAI-compatible endpoint (whisper, gemma4, etc.).
+    pub fn transcribe_audio_file(&self, model: &str, path: &Path) -> Result<String, OllamaError> {
+        let url = format!(
+            "{}/v1/audio/transcriptions",
+            self.base_url.trim_end_matches('/')
+        );
+        let bytes = std::fs::read(path).map_err(|e| {
+            OllamaError::Api(format!("could not read audio file: {}", e))
+        })?;
+        let file_name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "recording.webm".to_string());
+
+        let part = reqwest::blocking::multipart::Part::bytes(bytes)
+            .file_name(file_name)
+            .mime_str("application/octet-stream")
+            .map_err(|e| OllamaError::Api(e.to_string()))?;
+        let form = reqwest::blocking::multipart::Form::new()
+            .text("model", model.to_string())
+            .part("file", part);
+
+        let resp = self
+            .client
+            .post(&url)
+            .multipart(form)
+            .send()
+            .map_err(|e| OllamaError::Connection(e.to_string()))?;
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let text = resp.text().unwrap_or_default();
+            return Err(OllamaError::Api(format!(
+                "transcription failed ({}): {}",
+                status,
+                text
+            )));
+        }
+        let body = resp
+            .text()
+            .map_err(|e| OllamaError::Api(e.to_string()))?;
+        parse_transcription_response(&body)
+    }
+
     fn generate(&self, model: &str, prompt: &str) -> Result<String, OllamaError> {
         let url = format!("{}/api/generate", self.base_url.trim_end_matches('/'));
         let resp = self
@@ -263,4 +307,24 @@ impl OllamaClient {
             .map_err(|e| OllamaError::Api(e.to_string()))?;
         Ok(body.response.trim().to_string())
     }
+}
+
+#[derive(Debug, Deserialize)]
+struct TranscriptionResponse {
+    text: Option<String>,
+}
+
+fn parse_transcription_response(body: &str) -> Result<String, OllamaError> {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return Err(OllamaError::Api("empty transcription response".into()));
+    }
+    if let Ok(parsed) = serde_json::from_str::<TranscriptionResponse>(trimmed) {
+        if let Some(text) = parsed.text {
+            if !text.trim().is_empty() {
+                return Ok(text.trim().to_string());
+            }
+        }
+    }
+    Ok(trimmed.to_string())
 }

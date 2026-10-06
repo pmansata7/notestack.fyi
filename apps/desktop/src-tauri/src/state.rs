@@ -29,6 +29,9 @@ pub struct AppSettings {
     pub default_template_id: String,
     pub calendar_events_json: String,
     pub dictation_enabled: bool,
+    /// Ollama model for speech-to-text (e.g. whisper, gemma4:e4b). Empty uses whisper.
+    pub transcription_model: String,
+    pub auto_transcribe_on_stop: bool,
 }
 
 impl Default for AppSettings {
@@ -45,6 +48,8 @@ impl Default for AppSettings {
             default_template_id: "general".to_string(),
             calendar_events_json: "[]".to_string(),
             dictation_enabled: false,
+            transcription_model: "whisper".to_string(),
+            auto_transcribe_on_stop: true,
         }
     }
 }
@@ -61,6 +66,8 @@ impl AppSettings {
     pub const DEFAULT_TEMPLATE_KEY: &'static str = "default_template_id";
     pub const CALENDAR_JSON_KEY: &'static str = "calendar_events_json";
     pub const DICTATION_KEY: &'static str = "dictation_enabled";
+    pub const TRANSCRIPTION_MODEL_KEY: &'static str = "transcription_model";
+    pub const AUTO_TRANSCRIBE_KEY: &'static str = "auto_transcribe_on_stop";
 
     pub fn load(db: &Database) -> Self {
         let mut s = AppSettings::default();
@@ -104,6 +111,14 @@ impl AppSettings {
         }
         if let Ok(Some(v)) = db.get_setting(Self::DICTATION_KEY) {
             s.dictation_enabled = v == "true";
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::TRANSCRIPTION_MODEL_KEY) {
+            if !v.is_empty() {
+                s.transcription_model = v;
+            }
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::AUTO_TRANSCRIBE_KEY) {
+            s.auto_transcribe_on_stop = v == "true";
         }
         s
     }
@@ -157,6 +172,15 @@ impl AppSettings {
         db.set_setting(
             Self::DICTATION_KEY,
             if self.dictation_enabled {
+                "true"
+            } else {
+                "false"
+            },
+        )?;
+        db.set_setting(Self::TRANSCRIPTION_MODEL_KEY, &self.transcription_model)?;
+        db.set_setting(
+            Self::AUTO_TRANSCRIBE_KEY,
+            if self.auto_transcribe_on_stop {
                 "true"
             } else {
                 "false"
