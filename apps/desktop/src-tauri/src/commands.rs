@@ -616,7 +616,7 @@ pub fn transcribe_audio_base64(
     args: TranscribeAudioBase64Args,
     state: State<Mutex<AppState>>,
 ) -> Result<String, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = args
         .model
