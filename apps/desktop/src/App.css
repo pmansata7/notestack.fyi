@@ -967,6 +967,106 @@ label.check input {
   border: 1px solid var(--gemini-border);
 }
 
+.hardware-summary {
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.model-options {
+  border: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.model-options legend {
+  font-weight: 600;
+  margin-bottom: 0.65rem;
+}
+
+.model-option {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--gemini-border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.model-option.selected {
+  border-color: var(--gemini-blue);
+  box-shadow: 0 0 0 1px var(--gemini-blue-soft);
+}
+
+.model-option.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.model-option input[type="radio"] {
+  width: auto;
+  margin: 0.25rem 0 0;
+  accent-color: var(--gemini-blue);
+}
+
+.model-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.model-option-title {
+  font-weight: 600;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+}
+
+.model-option-meta {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.model-option-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.model-option-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--gemini-bg-soft);
+  border: 1px solid var(--gemini-border);
+  color: var(--text-secondary);
+}
+
+.model-option-badge.recommended {
+  background: var(--gemini-blue-soft);
+  border-color: transparent;
+  color: var(--gemini-blue);
+}
+
+.custom-model-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.92rem;
+}
+
+.custom-model-toggle input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--gemini-blue);
+}
+
 select {
   width: 100%;
   margin-top: 0.4rem;
