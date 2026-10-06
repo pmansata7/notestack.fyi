@@ -508,7 +508,7 @@ pub fn transcribe_recording_audio(
     model: Option<String>,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = model
         .filter(|m| !m.is_empty())
@@ -524,12 +524,12 @@ pub fn transcribe_recording_audio(
         .db
         .get_transcript(&transcript_id)
         .map_err(map_err)?
-        .ok_or_else(|| CommandError::from("transcript not found".into()))?;
+        .ok_or_else(|| command_err("transcript not found"))?;
 
     let path = t
         .audio_path
         .as_ref()
-        .ok_or_else(|| CommandError::from("no audio saved for this recording".into()))?;
+        .ok_or_else(|| command_err("no audio saved for this recording"))?;
 
     let client = OllamaClient::new(Some(settings.ollama_base_url));
     let text = client
