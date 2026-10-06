@@ -18,6 +18,14 @@ impl From<String> for CommandError {
     }
 }
 
+impl From<&str> for CommandError {
+    fn from(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+}
+
 fn map_err(e: impl std::fmt::Display) -> CommandError {
     CommandError {
         message: e.to_string(),
