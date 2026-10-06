@@ -422,7 +422,7 @@ fn launch_ollama_app() {
 }
 
 fn command_exists(name: &str) -> bool {
-    which_command(name).is_some()
+    which_command(name).is_ok()
 }
 
 fn which_command(name: &str) -> Result<PathBuf, ()> {
