@@ -52,6 +52,22 @@ struct PullRequest {
     stream: bool,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct PullProgress {
+    pub status: String,
+    pub completed: Option<u64>,
+    pub total: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PullStreamLine {
+    status: String,
+    #[serde(default)]
+    completed: Option<u64>,
+    #[serde(default)]
+    total: Option<u64>,
+}
+
 #[derive(Debug, Deserialize)]
 struct PullResponse {
     status: Option<String>,
@@ -59,8 +75,14 @@ struct PullResponse {
 
 fn friendly_pull_message(model: &str, body: &str) -> String {
     let trimmed = body.trim();
-    if trimmed.is_empty() {
-        return format!("{} is downloaded and ready to use.", display_model_name(model));
+    if trimmed.is_empty()
+        || trimmed.eq_ignore_ascii_case("success")
+        || trimmed == "download complete"
+    {
+        return format!(
+            "{} is downloaded and ready to use.",
+            display_model_name(model)
+        );
     }
     if let Ok(parsed) = serde_json::from_str::<PullResponse>(trimmed) {
         if parsed.status.as_deref() == Some("success") {
@@ -84,6 +106,7 @@ fn display_model_name(name: &str) -> String {
         .unwrap_or(name)
         .to_string()
 }
+
 
 pub struct OllamaClient {
     base_url: String,
@@ -141,22 +164,49 @@ impl OllamaClient {
             .collect())
     }
 
-    pub fn pull_model(&self, name: &str) -> Result<String, OllamaError> {
+    pub fn pull_model<F>(&self, name: &str, mut on_progress: F) -> Result<String, OllamaError>
+    where
+        F: FnMut(PullProgress),
+    {
+        use std::io::{BufRead, BufReader};
+
         let url = format!("{}/api/pull", self.base_url.trim_end_matches('/'));
-        let resp = self
-            .client
+        let pull_client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(7200))
+            .build()
+            .map_err(|e| OllamaError::Connection(e.to_string()))?;
+        let resp = pull_client
             .post(&url)
             .json(&PullRequest {
                 name: name.to_string(),
-                stream: false,
+                stream: true,
             })
             .send()
             .map_err(|e| OllamaError::Connection(e.to_string()))?;
         if !resp.status().is_success() {
             return Err(OllamaError::Http(format!("status {}", resp.status())));
         }
-        let body = resp.text().unwrap_or_default();
-        Ok(friendly_pull_message(name, &body))
+        let reader = BufReader::new(resp);
+        let mut last_status = String::from("download complete");
+        for line in reader.lines() {
+            let line = line.map_err(|e| OllamaError::Api(e.to_string()))?;
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let parsed: PullStreamLine = serde_json::from_str(line)
+                .map_err(|e| OllamaError::Api(e.to_string()))?;
+            last_status = parsed.status.clone();
+            on_progress(PullProgress {
+                status: parsed.status.clone(),
+                completed: parsed.completed,
+                total: parsed.total,
+            });
+            if parsed.status == "success" {
+                break;
+            }
+        }
+        Ok(friendly_pull_message(name, &last_status))
     }
 
     pub fn test_model(&self, model: &str) -> Result<String, OllamaError> {
@@ -537,6 +587,13 @@ mod pull_message_tests {
         assert!(msg.contains("llama3.2"));
         assert!(msg.contains("ready"));
         assert!(!msg.contains('{'));
+    }
+
+    #[test]
+    fn success_status_becomes_friendly_message() {
+        let msg = friendly_pull_message("llama3.2", "success");
+        assert!(msg.contains("llama3.2"));
+        assert!(!msg.eq("success"));
     }
 
     #[test]
