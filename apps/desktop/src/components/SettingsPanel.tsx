@@ -1,9 +1,11 @@
+import { open } from "@tauri-apps/plugin-dialog";
 import { useState } from "react";
 import {
   getDataDir,
   ollamaCheckConnection,
   ollamaListModels,
   saveSettings,
+  setStorageDirectory,
 } from "../api";
 import { MEETING_TEMPLATES } from "../types";
 import { normalizeSettings } from "../lib/settings";
@@ -28,6 +30,29 @@ export function SettingsPanel({
   const loadDataDir = async () => {
     const dir = await getDataDir();
     setDataDir(dir);
+  };
+
+  const chooseStorageFolder = async () => {
+    const selected = await open({
+      directory: true,
+      multiple: false,
+      title: "Choose folder for transcripts and summaries",
+      defaultPath: dataDir || undefined,
+    });
+    if (typeof selected !== "string" || !selected) {
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      const msg = await setStorageDirectory(selected);
+      setDataDir(selected);
+      setMessage(msg);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const save = async () => {
@@ -194,9 +219,16 @@ export function SettingsPanel({
           Run setup wizard again
         </button>
       </div>
+      <h3>Storage</h3>
+      <p className="muted small">
+        Transcripts, summaries, and recordings are stored locally in the folder below.
+      </p>
       <div className="row">
         <button type="button" className="ghost" onClick={loadDataDir}>
           Show data directory
+        </button>
+        <button type="button" className="secondary" onClick={chooseStorageFolder} disabled={busy}>
+          Change folder…
         </button>
       </div>
       {dataDir && <p className="muted mono">Data: {dataDir}</p>}

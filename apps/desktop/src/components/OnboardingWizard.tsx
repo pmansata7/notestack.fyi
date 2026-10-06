@@ -1,17 +1,23 @@
+import { open } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  getDataDir,
   ollamaCheckConnection,
+  ollamaInstall,
+  ollamaIsInstalled,
   ollamaListModels,
   ollamaPullModel,
   ollamaTestModel,
   saveSettings,
+  setStorageDirectory,
 } from "../api";
 import { normalizeSettings } from "../lib/settings";
 import type { AppSettings, OllamaModel } from "../types";
 
 const STEPS = [
   "Welcome",
+  "Storage",
   "Install Ollama",
   "Connect",
   "Pull model",
@@ -32,11 +38,101 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [models, setModels] = useState<OllamaModel[]>([]);
+  const [storageDir, setStorageDir] = useState("");
+  const [ollamaInstalled, setOllamaInstalled] = useState<boolean | null>(null);
+  const installAttempted = useRef(false);
 
   useEffect(() => {
     setBaseUrl(settings.ollama_base_url);
     setModel(settings.default_model || DEFAULT_MODEL);
   }, [settings]);
+
+  useEffect(() => {
+    void (async () => {
+      const dir = await getDataDir();
+      setStorageDir(dir);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (step !== 2) {
+      return;
+    }
+    void ensureOllamaInstalled();
+  }, [step]);
+
+  const ensureOllamaInstalled = async () => {
+    setBusy(true);
+    setStatus(null);
+    try {
+      const check = await ollamaIsInstalled();
+      setOllamaInstalled(check.installed);
+      if (check.installed) {
+        setStatus(check.message);
+        return;
+      }
+      if (installAttempted.current) {
+        setStatus(check.message);
+        return;
+      }
+      installAttempted.current = true;
+      setStatus("Ollama not found — running install command…");
+      const msg = await ollamaInstall();
+      const after = await ollamaIsInstalled();
+      setOllamaInstalled(after.installed);
+      setStatus(msg);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : String(e));
+      setOllamaInstalled(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const chooseStorageFolder = async () => {
+    const selected = await open({
+      directory: true,
+      multiple: false,
+      title: "Choose folder for transcripts and summaries",
+      defaultPath: storageDir || undefined,
+    });
+    if (typeof selected === "string" && selected.length > 0) {
+      setStorageDir(selected);
+    }
+  };
+
+  const applyStorageFolder = async () => {
+    if (!storageDir.trim()) {
+      setStatus("Pick a folder to continue.");
+      return;
+    }
+    setBusy(true);
+    setStatus(null);
+    try {
+      const msg = await setStorageDirectory(storageDir.trim());
+      setStatus(msg);
+      setStep(2);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const retryOllamaInstall = async () => {
+    setBusy(true);
+    setStatus(null);
+    try {
+      const msg = await ollamaInstall();
+      const after = await ollamaIsInstalled();
+      setOllamaInstalled(after.installed);
+      setStatus(msg);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const checkConnection = async () => {
     setBusy(true);
@@ -95,8 +191,8 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
         Welcome to Note<span className="gradient">Stack</span>
       </h1>
       <p className="muted">
-        Local-first meeting notes powered by Ollama on your Mac. Your recordings
-        and transcripts stay in your app data folder.
+        Local-first meeting notes powered by Ollama on your Mac. You choose where
+        transcripts, summaries, and recordings are stored.
       </p>
       <ol className="stepper">
         {STEPS.map((label, i) => (
@@ -109,8 +205,9 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       {step === 0 && (
         <section>
           <p>
-            This wizard helps you install Ollama, pull a text model for summaries,
-            and verify everything works before you record.
+            This wizard helps you pick a storage folder, install Ollama if needed,
+            pull a text model for summaries, and verify everything works before
+            you record.
           </p>
           <button type="button" onClick={() => setStep(1)}>Get started</button>
         </section>
@@ -119,9 +216,47 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       {step === 1 && (
         <section>
           <p>
-            Install Ollama from the official site, then open the Ollama app once
-            so the API is available at <code>localhost:11434</code>.
+            Transcripts, AI summaries, and audio recordings are saved under the
+            folder you choose. You can change this later in Settings before your
+            first meeting.
           </p>
+          <label>
+            Storage folder
+            <input
+              readOnly
+              value={storageDir}
+              placeholder="Choose a folder…"
+            />
+          </label>
+          <div className="row">
+            <button type="button" className="secondary" onClick={chooseStorageFolder}>
+              Choose folder…
+            </button>
+          </div>
+          {status && <p className="status">{status}</p>}
+          <div className="row">
+            <button type="button" className="ghost" onClick={() => setStep(0)}>Back</button>
+            <button type="button" onClick={applyStorageFolder} disabled={busy || !storageDir}>
+              Continue
+            </button>
+          </div>
+        </section>
+      )}
+
+      {step === 2 && (
+        <section>
+          <p>
+            NoteStack uses Ollama on your Mac for summaries and transcription.
+            If Ollama is not installed, we run the official install command
+            automatically (Homebrew on macOS when available).
+          </p>
+          {ollamaInstalled === false && (
+            <p className="muted">
+              Automatic install did not complete. You can retry or install manually,
+              then open the Ollama app once so the API is available at{" "}
+              <code>localhost:11434</code>.
+            </p>
+          )}
           <button
             type="button"
             className="secondary"
@@ -129,14 +264,24 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           >
             Open Ollama download page
           </button>
+          <button
+            type="button"
+            onClick={retryOllamaInstall}
+            disabled={busy}
+          >
+            {ollamaInstalled ? "Re-run install / start Ollama" : "Retry install"}
+          </button>
+          {status && <p className="status">{status}</p>}
           <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(0)}>Back</button>
-            <button type="button" onClick={() => setStep(2)}>I installed Ollama</button>
+            <button type="button" className="ghost" onClick={() => setStep(1)}>Back</button>
+            <button type="button" onClick={() => setStep(3)} disabled={busy}>
+              Continue
+            </button>
           </div>
         </section>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <section>
           <label>
             Ollama API URL
@@ -151,13 +296,13 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           </button>
           {status && <p className="status">{status}</p>}
           <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(1)}>Back</button>
-            <button type="button" onClick={() => setStep(3)}>Continue</button>
+            <button type="button" className="ghost" onClick={() => setStep(2)}>Back</button>
+            <button type="button" onClick={() => setStep(4)}>Continue</button>
           </div>
         </section>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <section>
           <label>
             Model to pull & use (e.g. llama3.2)
@@ -171,13 +316,13 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           )}
           {status && <p className="status">{status}</p>}
           <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(2)}>Back</button>
-            <button type="button" onClick={() => setStep(4)}>Continue</button>
+            <button type="button" className="ghost" onClick={() => setStep(3)}>Back</button>
+            <button type="button" onClick={() => setStep(5)}>Continue</button>
           </div>
         </section>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <section>
           <p>Run a quick generation test with <strong>{model}</strong>.</p>
           <button type="button" onClick={testAndFinish} disabled={busy}>
@@ -185,7 +330,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           </button>
           {status && <p className="status">{status}</p>}
           <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(3)}>Back</button>
+            <button type="button" className="ghost" onClick={() => setStep(4)}>Back</button>
           </div>
         </section>
       )}

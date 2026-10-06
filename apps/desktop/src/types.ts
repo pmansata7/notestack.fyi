@@ -56,6 +56,11 @@ export interface OllamaStatus {
   message: string;
 }
 
+export interface OllamaInstallStatus {
+  installed: boolean;
+  message: string;
+}
+
 export const MEETING_TEMPLATES: { id: string; label: string }[] = [
   { id: "general", label: "General meeting" },
   { id: "one_on_one", label: "1:1" },
