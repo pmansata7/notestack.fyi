@@ -1,6 +1,5 @@
 import { DownloadButton } from '../components/DownloadButton'
-import { GeminiMark } from '../components/GeminiMark'
-import { WaitlistForm } from '../components/WaitlistForm'
+import { NoteStackMark } from '../components/NoteStackMark'
 
 const privacyPillars = [
   {
@@ -112,7 +111,7 @@ function HeroSection() {
       <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-8 flex justify-center">
-            <GeminiMark size={56} />
+            <NoteStackMark size={56} variant="light" />
           </div>
           <p className="gemini-chip mb-6 inline-flex items-center gap-2 px-4 py-1.5 text-xs font-medium tracking-wide">
             <span className="text-[var(--color-gemini-blue)]">Privacy-first</span>
@@ -368,18 +367,16 @@ function DownloadSection() {
               'linear-gradient(145deg, #ffffff 0%, var(--color-gemini-bg-soft) 55%, color-mix(in srgb, var(--color-gemini-blue-soft) 35%, white) 100%)',
           }}
         >
-          <GeminiMark size={40} className="mx-auto" />
+          <NoteStackMark size={40} className="mx-auto" variant="light" />
           <h2 className="mt-5 gemini-section-heading">
             Ready for <span className="gemini-gradient-text font-medium">private</span> meeting notes?
           </h2>
           <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[var(--color-gemini-text-secondary)]">
             Download NoteStack for Mac, set up Ollama once, and keep every transcript on your machine.
-            The .dmg installer will be available here when we ship.
           </p>
           <div className="mt-8">
             <DownloadButton size="large" />
           </div>
-          <WaitlistForm />
           <p className="mt-6 text-xs text-[var(--color-gemini-text-muted)]">
             Requires macOS 13+ and Ollama · Universal build for Apple Silicon and Intel
           </p>
