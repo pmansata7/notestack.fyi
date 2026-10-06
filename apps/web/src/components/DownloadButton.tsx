@@ -1,27 +1,48 @@
+import { useMacDownloadUrl } from '../hooks/useMacDownloadUrl'
+
 type DownloadButtonProps = {
   className?: string
   size?: 'default' | 'large'
 }
 
 export function DownloadButton({ className = '', size = 'default' }: DownloadButtonProps) {
+  const { url, loading } = useMacDownloadUrl()
   const sizeClasses =
     size === 'large'
       ? 'px-8 py-3.5 text-base'
       : 'px-5 py-2.5 text-sm'
 
+  const ready = Boolean(url)
+
+  if (ready && url) {
+    return (
+      <a
+        href={url}
+        download
+        role="button"
+        aria-label="Download NoteStack for Mac"
+        className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gemini-blue)] ${sizeClasses} ${className}`}
+      >
+        <AppleIcon />
+        Download for Mac
+      </a>
+    )
+  }
+
   return (
     <a
-      href="#"
+      href="#download"
       role="button"
-      aria-label="Download NoteStack for Mac (coming soon)"
-      title="macOS .dmg download coming soon"
+      aria-label={loading ? 'Checking download availability' : 'Download NoteStack for Mac (coming soon)'}
+      aria-busy={loading}
+      title={loading ? 'Checking for release…' : 'macOS .dmg download coming soon'}
       onClick={(e) => e.preventDefault()}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gemini-blue)] ${sizeClasses} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gemini-blue)] ${sizeClasses} ${className} ${loading ? 'opacity-80' : ''}`}
     >
       <AppleIcon />
       Download for Mac
       <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-xs font-semibold tracking-wide">
-        Soon
+        {loading ? '…' : 'Soon'}
       </span>
     </a>
   )

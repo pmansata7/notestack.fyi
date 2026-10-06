@@ -238,7 +238,7 @@ fn migrate_transcripts_schema(conn: &Connection) -> Result<(), DbError> {
         .query_map([], |row| row.get::<_, String>(1))?
         .filter_map(|r| r.ok())
         .collect();
-    let mut add = |name: &str, ddl: &str| -> Result<(), DbError> {
+    let add = |name: &str, ddl: &str| -> Result<(), DbError> {
         if !columns.iter().any(|c| c == name) {
             conn.execute_batch(ddl)?;
         }
