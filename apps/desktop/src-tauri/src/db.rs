@@ -73,6 +73,10 @@ impl Database {
         })
     }
 
+    pub fn data_dir(&self) -> &PathBuf {
+        &self.data_dir
+    }
+
     pub fn recordings_dir(&self) -> PathBuf {
         self.data_dir.join("recordings")
     }

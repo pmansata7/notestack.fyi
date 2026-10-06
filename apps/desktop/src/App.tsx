@@ -16,7 +16,8 @@ import { TasksPanel } from "./components/TasksPanel";
 import { TrashPanel } from "./components/TrashPanel";
 import { TranscriptDetail } from "./components/TranscriptDetail";
 import { TranscriptList } from "./components/TranscriptList";
-import { GeminiMark } from "./components/GeminiMark";
+import { NoteStackLogo } from "./components/NoteStackLogo";
+import { NoteStackMark } from "./components/NoteStackMark";
 import { useDictation } from "./hooks/useDictation";
 import { useMeetingReminders } from "./hooks/useMeetingReminders";
 import { useRecording } from "./hooks/useRecording";
@@ -126,7 +127,7 @@ function App() {
     return (
       <div className="app loading">
         <div className="loading-shell">
-          <GeminiMark size={40} />
+          <NoteStackMark size={40} variant="light" />
           <p className="muted">Loading NoteStack…</p>
         </div>
       </div>
@@ -158,10 +159,7 @@ function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <GeminiMark size={28} />
-          <span>
-            Note<span className="brand-plus">Stack</span>
-          </span>
+          <NoteStackLogo height={26} className="brand-logo" />
           {recording.recording && (
             <span className="recording-pill">Recording {formatElapsed(recording.elapsedMs)}</span>
           )}
