@@ -1,10 +1,10 @@
 # Desktop feature parity map (Fireflies.ai & Granola.ai)
 
-Record Plus implements local-first equivalents of major desktop capabilities from [Fireflies](https://fireflies.ai/desktop) and [Granola](https://www.granola.ai/). Cloud-only items (bot join, CRM push, Sales Assist KB) are stubbed or documented as future work.
+NoteStack implements local-first equivalents of major desktop capabilities from [Fireflies](https://fireflies.ai/desktop) and [Granola](https://www.granola.ai/). Cloud-only items (bot join, CRM push, Sales Assist KB) are stubbed or documented as future work.
 
 ## Fireflies Desktop
 
-| Fireflies capability | Record Plus |
+| Fireflies capability | NoteStack |
 | --- | --- |
 | Bot-free / system-audio capture | **Take notes (no bot)** — mic capture today; system audio still platform-dependent |
 | Live Assist floating pane | **Live Assist** overlay: transcript, manual notes, Ask / AI skills |
@@ -23,7 +23,7 @@ Record Plus implements local-first equivalents of major desktop capabilities fro
 
 ## Granola Desktop
 
-| Granola capability | Record Plus |
+| Granola capability | NoteStack |
 | --- | --- |
 | AI notepad, no bot | Same **Take notes** flow |
 | Manual notes + Enhance | **Manual notes** + **Enhance notes** (user vs AI styling) |

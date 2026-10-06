@@ -1,12 +1,12 @@
 [package]
-name = "record-plus-app"
+name = "notestack-app"
 version = "0.1.0"
-description = "Record Plus — local-first meeting recorder"
-authors = ["Record Plus"]
+description = "NoteStack — local-first meeting recorder"
+authors = ["NoteStack"]
 edition = "2021"
 
 [lib]
-name = "record_plus_app_lib"
+name = "notestack_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

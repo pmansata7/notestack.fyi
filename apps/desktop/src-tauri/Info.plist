@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Record Plus needs microphone access to capture meeting audio.</string>
+	<string>NoteStack needs microphone access to capture meeting audio.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Record Plus uses on-device speech recognition for live transcripts when available.</string>
+	<string>NoteStack uses on-device speech recognition for live transcripts when available.</string>
 </dict>
 </plist>

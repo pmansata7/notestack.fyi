@@ -92,7 +92,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   return (
     <div className="panel onboarding">
       <h1>
-        Welcome to Record <span className="gradient">Plus</span>
+        Welcome to Note<span className="gradient">Stack</span>
       </h1>
       <p className="muted">
         Local-first meeting notes powered by Ollama on your Mac. Your recordings
