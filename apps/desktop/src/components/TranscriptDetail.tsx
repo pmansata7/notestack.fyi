@@ -6,7 +6,7 @@ import {
   transcribeRecordingAudio,
   updateTranscript,
 } from "../api";
-import { GeminiMark } from "./GeminiMark";
+import { NoteStackMark } from "./NoteStackMark";
 import {
   MEETING_TEMPLATES,
   type AppSettings,
@@ -88,7 +88,7 @@ export function TranscriptDetail({
   if (!transcript) {
     return (
       <div className="detail empty">
-        <GeminiMark size={48} />
+        <NoteStackMark size={48} variant="light" />
         <h2 className="gemini-greeting">Hello</h2>
         <p>Select a recording from the sidebar or start a new one to capture meeting notes locally.</p>
       </div>

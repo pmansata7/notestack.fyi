@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use thiserror::Error;
 
 pub const DEFAULT_OLLAMA_URL: &str = "http://localhost:11434";
@@ -312,6 +313,127 @@ impl OllamaClient {
 #[derive(Debug, Deserialize)]
 struct TranscriptionResponse {
     text: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct OllamaInstallStatus {
+    pub installed: bool,
+    pub message: String,
+}
+
+pub fn ollama_binary_path() -> Option<PathBuf> {
+    if let Ok(path) = which_command("ollama") {
+        return Some(path);
+    }
+    for candidate in [
+        "/usr/local/bin/ollama",
+        "/opt/homebrew/bin/ollama",
+        "/usr/bin/ollama",
+    ] {
+        let p = PathBuf::from(candidate);
+        if p.is_file() {
+            return Some(p);
+        }
+    }
+    None
+}
+
+pub fn is_ollama_installed() -> bool {
+    ollama_binary_path().is_some()
+}
+
+pub fn install_ollama() -> Result<String, String> {
+    if is_ollama_installed() {
+        launch_ollama_app();
+        return Ok("Ollama is already installed. Started the Ollama app if needed.".into());
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if command_exists("brew") {
+            let output = Command::new("brew")
+                .args(["install", "--cask", "ollama"])
+                .output()
+                .map_err(|e| format!("Failed to run brew: {}", e))?;
+            if output.status.success() || is_ollama_installed() {
+                launch_ollama_app();
+                return Ok("Installed Ollama with Homebrew. Open the Ollama app if the API is not up yet.".into());
+            }
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            if !stderr.trim().is_empty() || !stdout.trim().is_empty() {
+                return Err(format!(
+                    "Homebrew install failed: {}{}",
+                    stdout.trim(),
+                    if stderr.trim().is_empty() {
+                        String::new()
+                    } else {
+                        format!("\n{}", stderr.trim())
+                    }
+                ));
+            }
+        }
+
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("curl -fsSL https://ollama.com/install.sh | sh")
+            .output()
+            .map_err(|e| format!("Failed to run Ollama install script: {}", e))?;
+        if output.status.success() || is_ollama_installed() {
+            launch_ollama_app();
+            return Ok("Installed Ollama using the official install script.".into());
+        }
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "Ollama install script failed: {}",
+            stderr.trim()
+        ));
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("curl -fsSL https://ollama.com/install.sh | sh")
+            .output()
+            .map_err(|e| format!("Failed to run Ollama install script: {}", e))?;
+        if output.status.success() || is_ollama_installed() {
+            let _ = Command::new("ollama").arg("serve").spawn();
+            return Ok("Installed Ollama using the official install script.".into());
+        }
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "Ollama install script failed: {}",
+            stderr.trim()
+        ));
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    {
+        Err("Automatic Ollama install is not supported on this platform. Download from https://ollama.com/download.".into())
+    }
+}
+
+fn launch_ollama_app() {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = Command::new("open").args(["-a", "Ollama"]).spawn();
+    }
+}
+
+fn command_exists(name: &str) -> bool {
+    which_command(name).is_ok()
+}
+
+fn which_command(name: &str) -> Result<PathBuf, ()> {
+    let path = std::env::var_os("PATH").unwrap_or_default();
+    for dir in std::env::split_paths(&path) {
+        let candidate = dir.join(name);
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+    }
+    Err(())
 }
 
 fn parse_transcription_response(body: &str) -> Result<String, OllamaError> {

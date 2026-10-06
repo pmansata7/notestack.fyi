@@ -1,5 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, OllamaModel, OllamaStatus, Transcript } from "./types";
+import type {
+  AppSettings,
+  OllamaInstallStatus,
+  OllamaModel,
+  OllamaStatus,
+  Transcript,
+} from "./types";
 
 export async function getSettings(): Promise<AppSettings> {
   return invoke("get_settings");
@@ -11,6 +17,18 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
 
 export async function getDataDir(): Promise<string> {
   return invoke("get_data_dir");
+}
+
+export async function setStorageDirectory(path: string): Promise<string> {
+  return invoke("set_storage_directory", { path });
+}
+
+export async function ollamaIsInstalled(): Promise<OllamaInstallStatus> {
+  return invoke("ollama_is_installed");
+}
+
+export async function ollamaInstall(): Promise<string> {
+  return invoke("ollama_install");
 }
 
 export async function listTranscripts(
