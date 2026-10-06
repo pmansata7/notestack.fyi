@@ -72,6 +72,26 @@ function pullStatusLabel(status: string): string {
   }
 }
 
+type StatusKind = "info" | "success" | "error";
+
+function displayModelName(name: string): string {
+  return name.replace(/:latest$/, "");
+}
+
+function StatusBanner({
+  kind,
+  children,
+}: {
+  kind: StatusKind;
+  children: string;
+}) {
+  return (
+    <p className={`status status--${kind}`} role="status">
+      {children}
+    </p>
+  );
+}
+
 interface Props {
   settings: AppSettings;
   onComplete: (settings: AppSettings) => void;
@@ -95,6 +115,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   );
   const [customModel, setCustomModel] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [statusKind, setStatusKind] = useState<StatusKind>("info");
   const [busy, setBusy] = useState(false);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [hardware, setHardware] = useState<HardwareHints | null>(null);
@@ -180,6 +201,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
   const goToStep = (next: number) => {
     setStatus(null);
+    setStatusKind("info");
     setStep(next);
   };
 
@@ -262,11 +284,19 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     setConnected(false);
     try {
       const res = await ollamaCheckConnection(baseUrl);
-      setStatus(res.message);
       setConnected(res.connected);
       if (res.connected) {
+        setStatusKind("success");
+        setStatus("Connected to Ollama. You can continue to download models.");
         const list = await ollamaListModels(baseUrl);
         setModels(list);
+      } else {
+        setStatusKind("error");
+        setStatus(
+          res.message.includes("Connection")
+            ? "We couldn't reach Ollama. Make sure the Ollama app is running, then try again."
+            : res.message,
+        );
       }
     } finally {
       setBusy(false);
@@ -286,13 +316,17 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     setPullProgress(null);
     setDownloadStartedAt(Date.now());
     try {
-      const msg = await ollamaPullModel(name, baseUrl);
-      setStatus(
-        msg === "success" ? `Downloaded ${name}` : msg || `Downloaded ${name}`,
-      );
+      await ollamaPullModel(name, baseUrl);
       const list = await ollamaListModels(baseUrl);
       setModels(list);
+      setStatusKind("success");
+      setStatus(
+        name === model
+          ? `${displayModelName(name)} is ready. Continue to run a quick test.`
+          : `${displayModelName(name)} is ready.`,
+      );
     } catch (e) {
+      setStatusKind("error");
       setStatus(formatInvokeError(e));
     } finally {
       setBusy(false);
@@ -307,10 +341,16 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
   const testAndFinish = async () => {
     setBusy(true);
-    setStatus(null);
+    setStatusKind("info");
+    setStatus("Running a quick test with your model…");
     try {
       const reply = await ollamaTestModel(model, baseUrl);
-      setStatus(reply);
+      setStatusKind("success");
+      setStatus(
+        reply.trim()
+          ? `All set! Your model replied: “${reply.trim()}”`
+          : "All set! Your model is working.",
+      );
       const next: AppSettings = normalizeSettings({
         ...settings,
         ollama_base_url: baseUrl,
@@ -321,6 +361,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       await saveSettings(next);
       onComplete(next);
     } catch (e) {
+      setStatusKind("error");
       setStatus(formatInvokeError(e));
     } finally {
       setBusy(false);
@@ -496,7 +537,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           <button type="button" onClick={checkConnection} disabled={busy}>
             Test connection
           </button>
-          {status && <p className="status">{status}</p>}
+          {status && <StatusBanner kind={statusKind}>{status}</StatusBanner>}
           {!connected && (
             <p className="muted small">
               Test the connection to continue. Ollama must be running at the URL above.
@@ -670,9 +711,18 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
             </div>
           )}
           {models.length > 0 && (
-            <p className="muted">Installed: {models.map((m) => m.name).join(", ")}</p>
+            <div className="installed-models">
+              <p className="muted small">Already on your Mac</p>
+              <ul className="model-chips">
+                {models.map((m) => (
+                  <li key={m.name}>{displayModelName(m.name)}</li>
+                ))}
+              </ul>
+            </div>
           )}
-          {status && !downloading && <p className="status">{status}</p>}
+          {status && !downloading && (
+            <StatusBanner kind={statusKind}>{status}</StatusBanner>
+          )}
           {stepActions(3, () => goToStep(5), "Continue", downloading)}
         </section>
       )}
@@ -684,7 +734,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           <button type="button" onClick={testAndFinish} disabled={busy}>
             Test & finish setup
           </button>
-          {status && <p className="status">{status}</p>}
+          {status && <StatusBanner kind={statusKind}>{status}</StatusBanner>}
           <div className="row onboarding-actions">
             <button type="button" className="ghost" onClick={() => goToStep(4)}>
               Back

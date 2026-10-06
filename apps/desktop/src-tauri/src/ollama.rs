@@ -68,6 +68,46 @@ struct PullStreamLine {
     total: Option<u64>,
 }
 
+#[derive(Debug, Deserialize)]
+struct PullResponse {
+    status: Option<String>,
+}
+
+fn friendly_pull_message(model: &str, body: &str) -> String {
+    let trimmed = body.trim();
+    if trimmed.is_empty()
+        || trimmed.eq_ignore_ascii_case("success")
+        || trimmed == "download complete"
+    {
+        return format!(
+            "{} is downloaded and ready to use.",
+            display_model_name(model)
+        );
+    }
+    if let Ok(parsed) = serde_json::from_str::<PullResponse>(trimmed) {
+        if parsed.status.as_deref() == Some("success") {
+            return format!(
+                "{} is downloaded and ready to use.",
+                display_model_name(model)
+            );
+        }
+    }
+    if trimmed.starts_with('{') || trimmed.starts_with('[') {
+        return format!(
+            "{} is downloaded and ready to use.",
+            display_model_name(model)
+        );
+    }
+    trimmed.to_string()
+}
+
+fn display_model_name(name: &str) -> String {
+    name.strip_suffix(":latest")
+        .unwrap_or(name)
+        .to_string()
+}
+
+
 pub struct OllamaClient {
     base_url: String,
     client: reqwest::blocking::Client,
@@ -146,7 +186,6 @@ impl OllamaClient {
         if !resp.status().is_success() {
             return Err(OllamaError::Http(format!("status {}", resp.status())));
         }
-
         let reader = BufReader::new(resp);
         let mut last_status = String::from("download complete");
         for line in reader.lines() {
@@ -167,7 +206,7 @@ impl OllamaClient {
                 break;
             }
         }
-        Ok(last_status)
+        Ok(friendly_pull_message(name, &last_status))
     }
 
     pub fn test_model(&self, model: &str) -> Result<String, OllamaError> {
@@ -606,4 +645,29 @@ fn parse_transcription_response(body: &str) -> Result<String, OllamaError> {
         }
     }
     Ok(trimmed.to_string())
+}
+
+#[cfg(test)]
+mod pull_message_tests {
+    use super::{display_model_name, friendly_pull_message};
+
+    #[test]
+    fn success_json_becomes_friendly_message() {
+        let msg = friendly_pull_message("llama3.2", r#"{"status":"success"}"#);
+        assert!(msg.contains("llama3.2"));
+        assert!(msg.contains("ready"));
+        assert!(!msg.contains('{'));
+    }
+
+    #[test]
+    fn success_status_becomes_friendly_message() {
+        let msg = friendly_pull_message("llama3.2", "success");
+        assert!(msg.contains("llama3.2"));
+        assert!(!msg.eq("success"));
+    }
+
+    #[test]
+    fn strips_latest_suffix_for_display() {
+        assert_eq!(display_model_name("llama3.2:latest"), "llama3.2");
+    }
 }
