@@ -5,6 +5,7 @@ type GeminiMarkProps = {
   size?: number
 };
 
+/** NoteStack mark: stacked note pages for strong contrast on light backgrounds. */
 export function GeminiMark({ className = "", size = 28 }: GeminiMarkProps) {
   const id = useId().replace(/:/g, "");
   return (
@@ -18,16 +19,19 @@ export function GeminiMark({ className = "", size = 28 }: GeminiMarkProps) {
       aria-hidden
     >
       <defs>
-        <linearGradient id={id} x1="4" y1="24" x2="24" y2="4" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#4285F4" />
-          <stop offset="0.35" stopColor="#9B72CB" />
-          <stop offset="0.65" stopColor="#D96570" />
-          <stop offset="1" stopColor="#F4B400" />
+        <linearGradient id={`${id}-page`} x1="6" y1="6" x2="22" y2="24" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#1967d2" />
+          <stop offset="1" stopColor="#0b57d0" />
         </linearGradient>
       </defs>
+      <rect x="4" y="9" width="14" height="16" rx="2.5" fill="#c2d7f7" />
+      <rect x="6" y="7" width="14" height="16" rx="2.5" fill="#8ab4f8" />
+      <rect x="8" y="5" width="14" height="16" rx="2.5" fill={`url(#${id}-page)`} />
       <path
-        d="M14 2.5L16.8 11.2L25.5 14L16.8 16.8L14 25.5L11.2 16.8L2.5 14L11.2 11.2L14 2.5Z"
-        fill={`url(#${id})`}
+        d="M11.5 10.5h7M11.5 13.5h7M11.5 16.5h4.5"
+        stroke="white"
+        strokeWidth="1.35"
+        strokeLinecap="round"
       />
     </svg>
   );

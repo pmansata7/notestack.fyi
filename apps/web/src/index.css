@@ -30,7 +30,7 @@ body {
 }
 
 .gemini-gradient-text {
-  background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
+  background: linear-gradient(90deg, #0b57d0 0%, #1967d2 50%, #7c3aed 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
