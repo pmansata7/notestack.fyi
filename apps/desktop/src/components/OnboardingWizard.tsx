@@ -34,11 +34,12 @@ const STEPS = [
   "Storage",
   "Install Ollama",
   "Connect",
-  "Download model",
+  "Download models",
   "Test & finish",
 ] as const;
 
 const DEFAULT_MODEL = "llama3.2";
+const DEFAULT_SPEECH_MODEL = "whisper";
 const PULL_PROGRESS_EVENT = "ollama-pull-progress";
 
 function formatElapsed(seconds: number): string {
@@ -89,6 +90,9 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [baseUrl, setBaseUrl] = useState(settings.ollama_base_url);
   const [model, setModel] = useState(settings.default_model || DEFAULT_MODEL);
+  const [speechModel, setSpeechModel] = useState(
+    settings.transcription_model || DEFAULT_SPEECH_MODEL,
+  );
   const [customModel, setCustomModel] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -102,6 +106,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [downloadStartedAt, setDownloadStartedAt] = useState<number | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [pullProgress, setPullProgress] = useState<OllamaPullProgress | null>(null);
+  const [downloadingModel, setDownloadingModel] = useState<string | null>(null);
 
   const hardwareSummary = useMemo(() => {
     if (!hardware) return null;
@@ -111,6 +116,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   useEffect(() => {
     setBaseUrl(settings.ollama_base_url);
     setModel(settings.default_model || DEFAULT_MODEL);
+    setSpeechModel(settings.transcription_model || DEFAULT_SPEECH_MODEL);
   }, [settings]);
 
   useEffect(() => {
@@ -272,15 +278,18 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     setModel(option.id);
   };
 
-  const downloadModel = async () => {
+  const downloadNamedModel = async (name: string) => {
     setBusy(true);
     setDownloading(true);
+    setDownloadingModel(name);
     setStatus(null);
     setPullProgress(null);
     setDownloadStartedAt(Date.now());
     try {
-      const msg = await ollamaPullModel(model, baseUrl);
-      setStatus(msg === "success" ? `Downloaded ${model}` : msg || `Downloaded ${model}`);
+      const msg = await ollamaPullModel(name, baseUrl);
+      setStatus(
+        msg === "success" ? `Downloaded ${name}` : msg || `Downloaded ${name}`,
+      );
       const list = await ollamaListModels(baseUrl);
       setModels(list);
     } catch (e) {
@@ -288,9 +297,13 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     } finally {
       setBusy(false);
       setDownloading(false);
+      setDownloadingModel(null);
       setDownloadStartedAt(null);
     }
   };
+
+  const downloadTextModel = () => downloadNamedModel(model);
+  const downloadSpeechModel = () => downloadNamedModel(speechModel);
 
   const testAndFinish = async () => {
     setBusy(true);
@@ -302,6 +315,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
         ...settings,
         ollama_base_url: baseUrl,
         default_model: model,
+        transcription_model: speechModel,
         onboarding_complete: true,
       });
       await saveSettings(next);
@@ -377,8 +391,8 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
         <section className="onboarding-step" aria-labelledby="onboarding-step-0">
           <p id="onboarding-step-0">
             This wizard helps you pick a storage folder, install Ollama if needed,
-            download a text model for summaries, and verify everything works before you
-            record.
+            download speech and text models for live transcription and summaries, and
+            verify everything works before you record.
           </p>
           <div className="row onboarding-actions single">
             <button type="button" onClick={() => goToStep(1)}>Get started</button>
@@ -505,7 +519,34 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
       {step === 4 && (
         <section className="onboarding-step" aria-labelledby="onboarding-step-4">
-          <h2 id="onboarding-step-4" className="onboarding-step-title">Download model</h2>
+          <h2 id="onboarding-step-4" className="onboarding-step-title">Download models</h2>
+          <p className="muted">
+            NoteStack records WAV audio and transcribes with Ollama on your Mac (live
+            every ~10s while recording, then a final pass when you stop).
+          </p>
+
+          <h3 className="onboarding-step-subtitle">Speech model (live + final transcript)</h3>
+          <label>
+            Speech model name
+            <input
+              value={speechModel}
+              onChange={(e) => setSpeechModel(e.target.value)}
+              placeholder="whisper"
+              disabled={downloading}
+            />
+          </label>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void downloadSpeechModel()}
+            disabled={busy || downloading || !speechModel.trim()}
+          >
+            {downloading && downloadingModel === speechModel
+              ? "Downloading…"
+              : "Download speech model"}
+          </button>
+
+          <h3 className="onboarding-step-subtitle">Text model (summaries)</h3>
           {hardwareSummary ? (
             <p className="muted hardware-summary">
               About <strong>{formatDiskGb(hardwareSummary.diskGbFree)}</strong> free on
@@ -514,8 +555,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
                 <>
                   {" "}
                   We suggest <strong>{hardwareSummary.suggested.label}</strong> (~
-                  {hardwareSummary.suggested.downloadGb} GB download). Plan extra space for a
-                  speech model later (e.g. whisper).
+                  {hardwareSummary.suggested.downloadGb} GB download).
                 </>
               ) : (
                 <>
@@ -586,16 +626,18 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
           <button
             type="button"
-            onClick={downloadModel}
+            onClick={() => void downloadTextModel()}
             disabled={busy || downloading || !model.trim()}
           >
-            {downloading ? "Downloading…" : "Download model"}
+            {downloading && downloadingModel === model
+              ? "Downloading…"
+              : "Download text model"}
           </button>
-          {downloading && (
+          {downloading && downloadingModel && (
             <div className="download-progress" aria-live="polite">
               <div className="download-progress-header">
                 <span className="download-progress-label">
-                  Downloading <strong>{model}</strong>
+                  Downloading <strong>{downloadingModel}</strong>
                 </span>
                 <span className="download-progress-timer mono">{formatElapsed(elapsedSec)}</span>
               </div>

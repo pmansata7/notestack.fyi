@@ -288,23 +288,38 @@ impl OllamaClient {
         self.generate(model, &prompt)
     }
 
+    /// Transcribe in-memory audio (WAV preferred) via Ollama's OpenAI-compatible endpoint.
+    pub fn transcribe_audio_bytes(
+        &self,
+        model: &str,
+        bytes: &[u8],
+        file_name: &str,
+    ) -> Result<String, OllamaError> {
+        let (payload, name, mime) = normalize_audio_payload(bytes, file_name);
+        self.post_audio_transcription(model, payload, &name, mime)
+    }
+
     /// Transcribe audio via Ollama's OpenAI-compatible endpoint (whisper, gemma4, etc.).
     pub fn transcribe_audio_file(&self, model: &str, path: &Path) -> Result<String, OllamaError> {
+        let (bytes, file_name) = load_audio_for_transcription(path)?;
+        self.transcribe_audio_bytes(model, &bytes, &file_name)
+    }
+
+    fn post_audio_transcription(
+        &self,
+        model: &str,
+        bytes: Vec<u8>,
+        file_name: &str,
+        mime: &str,
+    ) -> Result<String, OllamaError> {
         let url = format!(
             "{}/v1/audio/transcriptions",
             self.base_url.trim_end_matches('/')
         );
-        let bytes = std::fs::read(path).map_err(|e| {
-            OllamaError::Api(format!("could not read audio file: {}", e))
-        })?;
-        let file_name = path
-            .file_name()
-            .map(|n| n.to_string_lossy().to_string())
-            .unwrap_or_else(|| "recording.webm".to_string());
 
         let part = reqwest::blocking::multipart::Part::bytes(bytes)
-            .file_name(file_name)
-            .mime_str("application/octet-stream")
+            .file_name(file_name.to_string())
+            .mime_str(mime)
             .map_err(|e| OllamaError::Api(e.to_string()))?;
         let form = reqwest::blocking::multipart::Form::new()
             .text("model", model.to_string())
@@ -358,6 +373,65 @@ impl OllamaClient {
 #[derive(Debug, Deserialize)]
 struct TranscriptionResponse {
     text: Option<String>,
+}
+
+fn load_audio_for_transcription(path: &Path) -> Result<(Vec<u8>, String), OllamaError> {
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if ext == "wav" {
+        let bytes = std::fs::read(path).map_err(|e| {
+            OllamaError::Api(format!("could not read audio file: {}", e))
+        })?;
+        return Ok((bytes, "recording.wav".to_string()));
+    }
+    if let Some(wav) = convert_to_wav_with_ffmpeg(path) {
+        return Ok((wav, "recording.wav".to_string()));
+    }
+    let bytes = std::fs::read(path).map_err(|e| {
+        OllamaError::Api(format!("could not read audio file: {}", e))
+    })?;
+    let file_name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| "recording.webm".to_string());
+    Ok((bytes, file_name))
+}
+
+fn convert_to_wav_with_ffmpeg(path: &Path) -> Option<Vec<u8>> {
+    use std::process::Stdio;
+    let output = Command::new("ffmpeg")
+        .args(["-nostdin", "-loglevel", "error", "-i"])
+        .arg(path)
+        .args(["-ar", "16000", "-ac", "1", "-f", "wav", "pipe:1"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output();
+    match output {
+        Ok(out) if out.status.success() && !out.stdout.is_empty() => Some(out.stdout),
+        _ => None,
+    }
+}
+
+fn normalize_audio_payload(
+    bytes: &[u8],
+    file_name: &str,
+) -> (Vec<u8>, String, &'static str) {
+    let lower = file_name.to_ascii_lowercase();
+    if lower.ends_with(".wav") || looks_like_wav(bytes) {
+        return (bytes.to_vec(), "recording.wav".to_string(), "audio/wav");
+    }
+    (
+        bytes.to_vec(),
+        file_name.to_string(),
+        "application/octet-stream",
+    )
+}
+
+fn looks_like_wav(bytes: &[u8]) -> bool {
+    bytes.len() >= 12 && &bytes[0..4] == b"RIFF" && &bytes[8..12] == b"WAVE"
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -506,10 +580,6 @@ fn launch_ollama_app() {
     {
         let _ = Command::new("open").args(["-a", "Ollama"]).spawn();
     }
-}
-
-fn command_exists(name: &str) -> bool {
-    which_command(name).is_ok()
 }
 
 fn which_command(name: &str) -> Result<PathBuf, ()> {

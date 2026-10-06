@@ -271,7 +271,7 @@ export function TranscriptDetail({
           }}
           placeholder={
             activeRecording
-              ? "Recording… live captions appear here when the browser supports them; otherwise transcribe after you stop."
+              ? "Recording… live transcript fills in here via Ollama on the desktop app (or browser speech when available)."
               : "Live speech-to-text appears here when supported, or use Transcribe from audio after recording."
           }
         />

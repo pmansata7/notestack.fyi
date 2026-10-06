@@ -605,6 +605,40 @@ pub fn run_live_skill(args: LiveSkillArgs) -> Result<String, CommandError> {
         .map_err(map_err)
 }
 
+#[derive(Debug, Deserialize)]
+pub struct TranscribeAudioBase64Args {
+    pub audio_base64: String,
+    pub model: Option<String>,
+}
+
+#[tauri::command]
+pub fn transcribe_audio_base64(
+    args: TranscribeAudioBase64Args,
+    state: State<Mutex<AppState>>,
+) -> Result<String, CommandError> {
+    let state = state.lock().map_err(|_| "state lock failed")?;
+    let settings = AppSettings::load(&state.db);
+    let model = args
+        .model
+        .filter(|m| !m.is_empty())
+        .unwrap_or_else(|| {
+            if settings.transcription_model.trim().is_empty() {
+                "whisper".to_string()
+            } else {
+                settings.transcription_model.clone()
+            }
+        });
+
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(args.audio_base64.trim())
+        .map_err(|e| CommandError::from(format!("invalid audio data: {}", e)))?;
+
+    let client = OllamaClient::new(Some(settings.ollama_base_url));
+    client
+        .transcribe_audio_bytes(&model, &bytes, "chunk.wav")
+        .map_err(map_err)
+}
+
 #[tauri::command]
 pub fn transcribe_recording_audio(
     transcript_id: String,
