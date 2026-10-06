@@ -1,8 +1,9 @@
-use crate::db::{now_iso, Transcript};
-use crate::ollama::OllamaClient;
-use crate::state::{AppSettings, AppState};
+use crate::db::{now_iso, Database, Transcript};
+use crate::ollama::{install_ollama, is_ollama_installed, OllamaClient, OllamaInstallStatus};
+use crate::state::{write_data_dir_override, AppSettings, AppState};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::State;
 use uuid::Uuid;
@@ -49,7 +50,79 @@ pub fn save_settings(
 #[tauri::command]
 pub fn get_data_dir(state: State<Mutex<AppState>>) -> Result<String, CommandError> {
     let state = state.lock().map_err(|_| command_err("state lock failed"))?;
-    Ok(state.db.recordings_dir().parent().unwrap().to_string_lossy().to_string())
+    Ok(state
+        .db
+        .data_dir()
+        .to_string_lossy()
+        .to_string())
+}
+
+#[tauri::command]
+pub fn set_storage_directory(
+    path: String,
+    state: State<Mutex<AppState>>,
+) -> Result<String, CommandError> {
+    let new_dir = PathBuf::from(path.trim());
+    if new_dir.as_os_str().is_empty() {
+        return Err(command_err("storage path is empty"));
+    }
+    std::fs::create_dir_all(&new_dir).map_err(map_err)?;
+
+    let mut state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let old_dir = state.db.data_dir().clone();
+    if old_dir == new_dir {
+        write_data_dir_override(&new_dir).map_err(map_err)?;
+        return Ok(format!("Using {}", new_dir.to_string_lossy()));
+    }
+
+    let transcripts = state.db.list_transcripts(true).map_err(map_err)?;
+    if transcripts.is_empty() {
+        relocate_empty_storage(&old_dir, &new_dir).map_err(map_err)?;
+    } else if old_dir != new_dir {
+        return Err(command_err(
+            "Cannot move storage while meetings exist. Export or delete transcripts first, or pick this folder before recording.",
+        ));
+    }
+
+    write_data_dir_override(&new_dir).map_err(map_err)?;
+    state.db = Database::open(new_dir.clone()).map_err(map_err)?;
+    Ok(format!(
+        "Transcripts and summaries will be stored in {}",
+        new_dir.to_string_lossy()
+    ))
+}
+
+fn relocate_empty_storage(old_dir: &PathBuf, new_dir: &PathBuf) -> Result<(), String> {
+    if old_dir == new_dir {
+        return Ok(());
+    }
+    for name in ["notestack.db", "record-plus.db"] {
+        let from = old_dir.join(name);
+        let to = new_dir.join(name);
+        if from.is_file() && !to.exists() {
+            if let Err(e) = std::fs::rename(&from, &to) {
+                std::fs::copy(&from, &to).map_err(|e2| format!("copy db: {} / {}", e, e2))?;
+                let _ = std::fs::remove_file(&from);
+            }
+        }
+    }
+    let old_recordings = old_dir.join("recordings");
+    let new_recordings = new_dir.join("recordings");
+    if old_recordings.is_dir() {
+        std::fs::create_dir_all(&new_recordings).map_err(|e| e.to_string())?;
+        for entry in std::fs::read_dir(&old_recordings).map_err(|e| e.to_string())? {
+            let entry = entry.map_err(|e| e.to_string())?;
+            let dest = new_recordings.join(entry.file_name());
+            if dest.exists() {
+                continue;
+            }
+            if let Err(e) = std::fs::rename(entry.path(), &dest) {
+                std::fs::copy(entry.path(), &dest).map_err(|e2| format!("copy recording: {} / {}", e, e2))?;
+                let _ = std::fs::remove_file(entry.path());
+            }
+        }
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -252,6 +325,24 @@ pub fn save_recording_audio(
 pub struct OllamaStatus {
     pub connected: bool,
     pub message: String,
+}
+
+#[tauri::command]
+pub fn ollama_is_installed() -> Result<OllamaInstallStatus, CommandError> {
+    let installed = is_ollama_installed();
+    Ok(OllamaInstallStatus {
+        installed,
+        message: if installed {
+            "Ollama CLI is installed.".into()
+        } else {
+            "Ollama was not found on PATH. You can install it automatically.".into()
+        },
+    })
+}
+
+#[tauri::command]
+pub fn ollama_install() -> Result<String, CommandError> {
+    install_ollama().map_err(map_err)
 }
 
 #[tauri::command]
