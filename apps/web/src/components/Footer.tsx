@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { GeminiMark } from './GeminiMark'
+import { NoteStackMark } from './NoteStackMark'
 
 type FooterLink =
   | { label: string; href: string }
@@ -18,7 +18,7 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex max-w-md items-start gap-3">
-            <GeminiMark size={28} className="mt-0.5 shrink-0" />
+            <NoteStackMark size={28} className="mt-0.5 shrink-0" variant="light" />
             <div>
               <p className="font-medium text-[var(--color-gemini-text)]">NoteStack</p>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-muted)]">

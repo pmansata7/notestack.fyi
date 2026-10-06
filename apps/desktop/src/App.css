@@ -94,6 +94,13 @@ body {
   color: #1f1f1f;
 }
 
+.brand-logo {
+  display: block;
+  height: 1.625rem;
+  width: auto;
+  max-width: 10.5rem;
+}
+
 .brand-plus {
   background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
   -webkit-background-clip: text;
