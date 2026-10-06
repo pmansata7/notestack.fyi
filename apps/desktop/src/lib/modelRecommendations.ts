@@ -10,7 +10,13 @@ export interface TextModelOption {
   tier: "light" | "balanced" | "quality";
 }
 
-/** Room for a speech model (e.g. whisper) plus general headroom. */
+/** Default Ollama model for live + final transcription (audio-capable gemma4 variant). */
+export const DEFAULT_SPEECH_MODEL = "gemma4:e4b";
+
+/** Legacy default that is not in the Ollama library — migrate on load. */
+export const LEGACY_SPEECH_MODEL = "whisper";
+
+/** Room for a speech model plus general headroom. */
 const EXTRA_DISK_RESERVE_GB = 3.5;
 
 export const TEXT_MODEL_OPTIONS: TextModelOption[] = [
