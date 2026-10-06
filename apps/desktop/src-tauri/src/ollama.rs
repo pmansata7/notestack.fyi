@@ -51,6 +51,39 @@ struct PullRequest {
     stream: bool,
 }
 
+#[derive(Debug, Deserialize)]
+struct PullResponse {
+    status: Option<String>,
+}
+
+fn friendly_pull_message(model: &str, body: &str) -> String {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return format!("{} is downloaded and ready to use.", display_model_name(model));
+    }
+    if let Ok(parsed) = serde_json::from_str::<PullResponse>(trimmed) {
+        if parsed.status.as_deref() == Some("success") {
+            return format!(
+                "{} is downloaded and ready to use.",
+                display_model_name(model)
+            );
+        }
+    }
+    if trimmed.starts_with('{') || trimmed.starts_with('[') {
+        return format!(
+            "{} is downloaded and ready to use.",
+            display_model_name(model)
+        );
+    }
+    trimmed.to_string()
+}
+
+fn display_model_name(name: &str) -> String {
+    name.strip_suffix(":latest")
+        .unwrap_or(name)
+        .to_string()
+}
+
 pub struct OllamaClient {
     base_url: String,
     client: reqwest::blocking::Client,
@@ -121,7 +154,8 @@ impl OllamaClient {
         if !resp.status().is_success() {
             return Err(OllamaError::Http(format!("status {}", resp.status())));
         }
-        Ok(resp.text().unwrap_or_else(|_| "pull complete".into()))
+        let body = resp.text().unwrap_or_default();
+        Ok(friendly_pull_message(name, &body))
     }
 
     pub fn test_model(&self, model: &str) -> Result<String, OllamaError> {
@@ -327,4 +361,22 @@ fn parse_transcription_response(body: &str) -> Result<String, OllamaError> {
         }
     }
     Ok(trimmed.to_string())
+}
+
+#[cfg(test)]
+mod pull_message_tests {
+    use super::{display_model_name, friendly_pull_message};
+
+    #[test]
+    fn success_json_becomes_friendly_message() {
+        let msg = friendly_pull_message("llama3.2", r#"{"status":"success"}"#);
+        assert!(msg.contains("llama3.2"));
+        assert!(msg.contains("ready"));
+        assert!(!msg.contains('{'));
+    }
+
+    #[test]
+    fn strips_latest_suffix_for_display() {
+        assert_eq!(display_model_name("llama3.2:latest"), "llama3.2");
+    }
 }

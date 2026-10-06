@@ -487,6 +487,42 @@ button:disabled {
   color: #0842a0;
 }
 
+.status.status--success {
+  background: var(--gemini-success-soft);
+  color: var(--gemini-success-text);
+}
+
+.status.status--error {
+  background: var(--gemini-danger-soft);
+  color: var(--gemini-danger);
+}
+
+.installed-models {
+  margin-top: 0.85rem;
+}
+
+.installed-models .muted {
+  margin: 0 0 0.4rem;
+}
+
+.model-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.model-chips li {
+  padding: 0.25rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--gemini-bg-muted);
+  border-radius: var(--radius-pill);
+}
+
 .error {
   color: var(--gemini-danger);
   font-size: 0.88rem;

@@ -14,11 +14,31 @@ const STEPS = [
   "Welcome",
   "Install Ollama",
   "Connect",
-  "Pull model",
+  "Download model",
   "Test & finish",
 ] as const;
 
 const DEFAULT_MODEL = "llama3.2";
+
+type StatusKind = "info" | "success" | "error";
+
+function displayModelName(name: string): string {
+  return name.replace(/:latest$/, "");
+}
+
+function StatusBanner({
+  kind,
+  children,
+}: {
+  kind: StatusKind;
+  children: string;
+}) {
+  return (
+    <p className={`status status--${kind}`} role="status">
+      {children}
+    </p>
+  );
+}
 
 interface Props {
   settings: AppSettings;
@@ -30,6 +50,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [baseUrl, setBaseUrl] = useState(settings.ollama_base_url);
   const [model, setModel] = useState(settings.default_model || DEFAULT_MODEL);
   const [status, setStatus] = useState<string | null>(null);
+  const [statusKind, setStatusKind] = useState<StatusKind>("info");
   const [busy, setBusy] = useState(false);
   const [models, setModels] = useState<OllamaModel[]>([]);
 
@@ -43,10 +64,18 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     setStatus(null);
     try {
       const res = await ollamaCheckConnection(baseUrl);
-      setStatus(res.message);
       if (res.connected) {
+        setStatusKind("success");
+        setStatus("Connected to Ollama. You can continue to download a model.");
         const list = await ollamaListModels(baseUrl);
         setModels(list);
+      } else {
+        setStatusKind("error");
+        setStatus(
+          res.message.includes("Connection")
+            ? "We couldn't reach Ollama. Make sure the Ollama app is running, then try again."
+            : res.message,
+        );
       }
     } finally {
       setBusy(false);
@@ -55,14 +84,25 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
   const pullModel = async () => {
     setBusy(true);
-    setStatus("Pulling model (this may take several minutes)…");
+    setStatusKind("info");
+    setStatus(
+      `Downloading ${displayModelName(model)}… First-time downloads can take several minutes.`,
+    );
     try {
-      const msg = await ollamaPullModel(model, baseUrl);
-      setStatus(msg || `Pulled ${model}`);
+      await ollamaPullModel(model, baseUrl);
       const list = await ollamaListModels(baseUrl);
       setModels(list);
+      setStatusKind("success");
+      setStatus(
+        `${displayModelName(model)} is ready. Continue to run a quick test.`,
+      );
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatusKind("error");
+      setStatus(
+        e instanceof Error
+          ? e.message
+          : "Something went wrong while downloading the model. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -70,10 +110,16 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
   const testAndFinish = async () => {
     setBusy(true);
-    setStatus(null);
+    setStatusKind("info");
+    setStatus("Running a quick test with your model…");
     try {
       const reply = await ollamaTestModel(model, baseUrl);
-      setStatus(reply);
+      setStatusKind("success");
+      setStatus(
+        reply.trim()
+          ? `All set! Your model replied: “${reply.trim()}”`
+          : "All set! Your model is working.",
+      );
       const next: AppSettings = normalizeSettings({
         ...settings,
         ollama_base_url: baseUrl,
@@ -83,7 +129,12 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       await saveSettings(next);
       onComplete(next);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatusKind("error");
+      setStatus(
+        e instanceof Error
+          ? e.message
+          : "The test didn't succeed. Check that the model name is correct and Ollama is running.",
+      );
     } finally {
       setBusy(false);
     }
@@ -149,7 +200,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           <button type="button" onClick={checkConnection} disabled={busy}>
             Test connection
           </button>
-          {status && <p className="status">{status}</p>}
+          {status && <StatusBanner kind={statusKind}>{status}</StatusBanner>}
           <div className="row">
             <button type="button" className="ghost" onClick={() => setStep(1)}>Back</button>
             <button type="button" onClick={() => setStep(3)}>Continue</button>
@@ -160,16 +211,23 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       {step === 3 && (
         <section>
           <label>
-            Model to pull & use (e.g. llama3.2)
+            Model to download & use (e.g. llama3.2)
             <input value={model} onChange={(e) => setModel(e.target.value)} />
           </label>
           <button type="button" onClick={pullModel} disabled={busy}>
-            Pull model
+            {busy ? "Downloading…" : "Download model"}
           </button>
           {models.length > 0 && (
-            <p className="muted">Installed: {models.map((m) => m.name).join(", ")}</p>
+            <div className="installed-models">
+              <p className="muted small">Already on your Mac</p>
+              <ul className="model-chips">
+                {models.map((m) => (
+                  <li key={m.name}>{displayModelName(m.name)}</li>
+                ))}
+              </ul>
+            </div>
           )}
-          {status && <p className="status">{status}</p>}
+          {status && <StatusBanner kind={statusKind}>{status}</StatusBanner>}
           <div className="row">
             <button type="button" className="ghost" onClick={() => setStep(2)}>Back</button>
             <button type="button" onClick={() => setStep(4)}>Continue</button>
@@ -183,7 +241,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
           <button type="button" onClick={testAndFinish} disabled={busy}>
             Test & finish setup
           </button>
-          {status && <p className="status">{status}</p>}
+          {status && <StatusBanner kind={statusKind}>{status}</StatusBanner>}
           <div className="row">
             <button type="button" className="ghost" onClick={() => setStep(3)}>Back</button>
           </div>
