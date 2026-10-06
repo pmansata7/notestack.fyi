@@ -1,8 +1,9 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getDataDir,
+  getHardwareHints,
   ollamaCheckConnection,
   ollamaInstall,
   ollamaIsInstalled,
@@ -13,8 +14,14 @@ import {
   setStorageDirectory,
 } from "../api";
 import { formatInvokeError } from "../lib/errors";
+import {
+  formatDiskGb,
+  modelsForHardware,
+  TEXT_MODEL_OPTIONS,
+  type TextModelOption,
+} from "../lib/modelRecommendations";
 import { normalizeSettings } from "../lib/settings";
-import type { AppSettings, OllamaModel } from "../types";
+import type { AppSettings, HardwareHints, OllamaModel } from "../types";
 
 const STEPS = [
   "Welcome",
@@ -45,13 +52,20 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [baseUrl, setBaseUrl] = useState(settings.ollama_base_url);
   const [model, setModel] = useState(settings.default_model || DEFAULT_MODEL);
+  const [customModel, setCustomModel] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [models, setModels] = useState<OllamaModel[]>([]);
+  const [hardware, setHardware] = useState<HardwareHints | null>(null);
   const [storageDir, setStorageDir] = useState("");
   const [ollamaInstalled, setOllamaInstalled] = useState<boolean | null>(null);
   const [connected, setConnected] = useState(false);
   const installAttempted = useRef(false);
+
+  const hardwareSummary = useMemo(() => {
+    if (!hardware) return null;
+    return modelsForHardware(hardware);
+  }, [hardware]);
 
   useEffect(() => {
     setBaseUrl(settings.ollama_base_url);
@@ -64,6 +78,30 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       setStorageDir(dir);
     })();
   }, []);
+
+  useEffect(() => {
+    if (step !== 4) return;
+    let cancelled = false;
+    void getHardwareHints().then((hints) => {
+      if (!cancelled) setHardware(hints);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== 4 || customModel || !hardwareSummary) return;
+    if (hardwareSummary.fits.length === 0) {
+      setCustomModel(true);
+      setModel("llama3.2:1b");
+      return;
+    }
+    const fitsIds = new Set(hardwareSummary.fits.map((m) => m.id));
+    if (!fitsIds.has(model)) {
+      setModel(hardwareSummary.suggested.id);
+    }
+  }, [step, customModel, hardwareSummary, model]);
 
   useEffect(() => {
     if (step !== 2) {
@@ -167,6 +205,11 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     }
   };
 
+  const selectPreset = (option: TextModelOption) => {
+    setCustomModel(false);
+    setModel(option.id);
+  };
+
   const pullModel = async () => {
     setBusy(true);
     setStatus("Pulling model (this may take several minutes)…");
@@ -202,6 +245,9 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       setBusy(false);
     }
   };
+
+  const optionFits = (option: TextModelOption) =>
+    hardwareSummary?.fits.some((m) => m.id === option.id) ?? true;
 
   const stepActions = (
     back: number | null,
@@ -386,11 +432,80 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       {step === 4 && (
         <section className="onboarding-step" aria-labelledby="onboarding-step-4">
           <h2 id="onboarding-step-4" className="onboarding-step-title">Pull a text model</h2>
-          <label>
-            Model to pull & use (e.g. llama3.2)
-            <input value={model} onChange={(e) => setModel(e.target.value)} />
+          {hardwareSummary ? (
+            <p className="muted hardware-summary">
+              About <strong>{formatDiskGb(hardwareSummary.diskGbFree)}</strong> free on
+              your home disk and <strong>{Math.round(hardwareSummary.ramGbTotal)} GB</strong> RAM.
+              {hardwareSummary.fits.length > 0 ? (
+                <>
+                  {" "}
+                  We suggest <strong>{hardwareSummary.suggested.label}</strong> (~
+                  {hardwareSummary.suggested.downloadGb} GB download). Plan extra space for a
+                  speech model later (e.g. whisper).
+                </>
+              ) : (
+                <>
+                  {" "}
+                  Free space or RAM is tight for our presets—you can still enter a smaller model
+                  name below.
+                </>
+              )}
+            </p>
+          ) : (
+            <p className="muted">Checking disk and memory…</p>
+          )}
+
+          <fieldset className="model-options">
+            <legend>Choose a text model</legend>
+            {TEXT_MODEL_OPTIONS.map((option) => {
+              const fits = optionFits(option);
+              return (
+                <label
+                  key={option.id}
+                  className={`model-option${!customModel && model === option.id ? " selected" : ""}${!fits ? " disabled" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="text-model"
+                    checked={!customModel && model === option.id}
+                    disabled={!fits}
+                    onChange={() => selectPreset(option)}
+                  />
+                  <span className="model-option-body">
+                    <span className="model-option-title">
+                      {option.label}
+                      {!fits && <span className="model-option-badge">Needs more disk or RAM</span>}
+                      {fits && option.id === hardwareSummary?.suggested.id && (
+                        <span className="model-option-badge recommended">Suggested</span>
+                      )}
+                    </span>
+                    <span className="model-option-meta">
+                      ~{option.downloadGb} GB · {option.minRamGb} GB RAM min
+                    </span>
+                    <span className="model-option-desc">{option.description}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+
+          <label className="custom-model-toggle">
+            <input
+              type="checkbox"
+              checked={customModel}
+              onChange={(e) => setCustomModel(e.target.checked)}
+            />
+            Use a custom model name
           </label>
-          <button type="button" onClick={pullModel} disabled={busy}>
+
+          {customModel && (
+            <label>
+              Model to pull & use
+              <input value={model} onChange={(e) => setModel(e.target.value)} />
+            </label>
+          )}
+
+          <button type="button" onClick={pullModel} disabled={busy || !model.trim()}>
             Pull model
           </button>
           {models.length > 0 && (
