@@ -24,12 +24,6 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "macOS": {
-      "infoPlist": {
-        "NSMicrophoneUsageDescription": "Record Plus needs microphone access to capture meeting audio.",
-        "NSSpeechRecognitionUsageDescription": "Record Plus uses on-device speech recognition for live transcripts when available."
-      }
-    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
