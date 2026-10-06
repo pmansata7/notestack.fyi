@@ -67,7 +67,7 @@ Rust modules: `db`, `ollama`, `commands`, `state`. React: `OnboardingWizard`, `S
 
 - **Code signing & notarization** for distribution outside your machine
 - **System audio / meeting capture** — MVP records microphone only; capturing other apps requires ScreenCaptureKit or a virtual device (e.g. BlackHole)
-- **Fully local STT** — live text uses Web Speech when available; offline Whisper (or similar) is not bundled yet
+- **Fully local STT** — on the desktop app, live transcript uses Ollama in ~10s chunks (16 kHz WAV); browser dev uses Web Speech when available. Pull a speech model (`ollama pull whisper`) during onboarding or in Settings.
 - **Ollama lifecycle** — app assumes Ollama is installed and running; no embedded model runtime
 - **Auto-update, crash reporting, menu bar / tray UX** not implemented
 - **Linux/Windows** — untested; macOS is the target platform

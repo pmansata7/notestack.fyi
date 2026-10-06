@@ -112,6 +112,18 @@ export async function transcribeRecordingAudio(
   });
 }
 
+export async function transcribeAudioBase64(
+  audioBase64: string,
+  model?: string,
+): Promise<string> {
+  return invoke("transcribe_audio_base64", {
+    args: {
+      audio_base64: audioBase64,
+      model,
+    },
+  });
+}
+
 export async function ollamaCheckConnection(
   baseUrl?: string,
 ): Promise<OllamaStatus> {
