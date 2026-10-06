@@ -326,9 +326,10 @@ pub fn ollama_binary_path() -> Option<PathBuf> {
         return Some(path);
     }
     for candidate in [
-        "/usr/local/bin/ollama",
         "/opt/homebrew/bin/ollama",
+        "/usr/local/bin/ollama",
         "/usr/bin/ollama",
+        "/Applications/Ollama.app/Contents/Resources/ollama",
     ] {
         let p = PathBuf::from(candidate);
         if p.is_file() {
@@ -339,7 +340,44 @@ pub fn ollama_binary_path() -> Option<PathBuf> {
 }
 
 pub fn is_ollama_installed() -> bool {
-    ollama_binary_path().is_some()
+    ollama_binary_path().is_some() || ollama_app_bundle_path().is_some()
+}
+
+fn ollama_app_bundle_path() -> Option<PathBuf> {
+    let bundle = PathBuf::from("/Applications/Ollama.app");
+    if bundle.is_dir() {
+        return Some(bundle);
+    }
+    None
+}
+
+fn brew_binary_path() -> Option<PathBuf> {
+    if let Ok(path) = which_command("brew") {
+        return Some(path);
+    }
+    for candidate in ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"] {
+        let p = PathBuf::from(candidate);
+        if p.is_file() {
+            return Some(p);
+        }
+    }
+    None
+}
+
+/// macOS GUI apps often launch with a minimal PATH; Homebrew lives outside it.
+fn command_with_extended_path(program: &Path) -> Command {
+    let mut cmd = Command::new(program);
+    #[cfg(target_os = "macos")]
+    {
+        let path = std::env::var("PATH").unwrap_or_default();
+        let extended = if path.is_empty() {
+            "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin".to_string()
+        } else {
+            format!("/opt/homebrew/bin:/usr/local/bin:{}", path)
+        };
+        cmd.env("PATH", extended);
+    }
+    cmd
 }
 
 pub fn install_ollama() -> Result<String, String> {
@@ -350,8 +388,8 @@ pub fn install_ollama() -> Result<String, String> {
 
     #[cfg(target_os = "macos")]
     {
-        if command_exists("brew") {
-            let output = Command::new("brew")
+        if let Some(brew) = brew_binary_path() {
+            let output = command_with_extended_path(&brew)
                 .args(["install", "--cask", "ollama"])
                 .output()
                 .map_err(|e| format!("Failed to run brew: {}", e))?;
@@ -372,9 +410,13 @@ pub fn install_ollama() -> Result<String, String> {
                     }
                 ));
             }
+            return Err(
+                "Homebrew install failed (no output). Try: brew install --cask ollama"
+                    .into(),
+            );
         }
 
-        let output = Command::new("sh")
+        let output = command_with_extended_path(Path::new("sh"))
             .arg("-c")
             .arg("curl -fsSL https://ollama.com/install.sh | sh")
             .output()

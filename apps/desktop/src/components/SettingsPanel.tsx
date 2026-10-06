@@ -8,6 +8,7 @@ import {
   setStorageDirectory,
 } from "../api";
 import { MEETING_TEMPLATES } from "../types";
+import { formatInvokeError } from "../lib/errors";
 import { normalizeSettings } from "../lib/settings";
 import type { AppSettings } from "../types";
 
@@ -49,7 +50,7 @@ export function SettingsPanel({
       setDataDir(selected);
       setMessage(msg);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : String(e));
+      setMessage(formatInvokeError(e));
     } finally {
       setBusy(false);
     }
