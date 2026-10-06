@@ -508,7 +508,7 @@ pub fn transcribe_recording_audio(
     model: Option<String>,
     state: State<Mutex<AppState>>,
 ) -> Result<Transcript, CommandError> {
-    let state = state.lock().map_err(|_| "state lock failed")?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
     let settings = AppSettings::load(&state.db);
     let model = model
         .filter(|m| !m.is_empty())
