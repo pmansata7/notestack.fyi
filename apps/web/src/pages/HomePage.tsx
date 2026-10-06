@@ -1,5 +1,6 @@
 import { DownloadButton } from '../components/DownloadButton'
 import { GeminiMark } from '../components/GeminiMark'
+import { WaitlistForm } from '../components/WaitlistForm'
 
 const privacyPillars = [
   {
@@ -378,8 +379,9 @@ function DownloadSection() {
           <div className="mt-8">
             <DownloadButton size="large" />
           </div>
+          <WaitlistForm />
           <p className="mt-6 text-xs text-[var(--color-gemini-text-muted)]">
-            Placeholder link · Replace with signed .dmg URL before launch
+            Requires macOS 13+ and Ollama · Universal build for Apple Silicon and Intel
           </p>
         </div>
       </div>

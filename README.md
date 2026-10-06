@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-See [apps/web/README.md](apps/web/README.md) for build and deploy notes.
+See [apps/web/README.md](apps/web/README.md) for build notes and [docs/deploy-vercel-supabase.md](docs/deploy-vercel-supabase.md) for **Vercel + Supabase** hosting.
 
 ## Quick start (desktop)
 

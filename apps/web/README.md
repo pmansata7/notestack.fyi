@@ -19,3 +19,13 @@ npm run preview
 ```
 
 Static output is in `dist/`.
+
+## Deploy (Vercel + Supabase)
+
+See [../../docs/deploy-vercel-supabase.md](../../docs/deploy-vercel-supabase.md) for project setup, env vars, database migration, and custom domain steps.
+
+Quick env copy:
+
+```bash
+cp .env.example .env.local
+```
