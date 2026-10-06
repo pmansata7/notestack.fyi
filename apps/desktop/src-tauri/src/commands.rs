@@ -126,6 +126,11 @@ fn relocate_empty_storage(old_dir: &PathBuf, new_dir: &PathBuf) -> Result<(), St
 }
 
 #[tauri::command]
+pub fn get_hardware_hints() -> crate::system::HardwareHints {
+    crate::system::hardware_hints()
+}
+
+#[tauri::command]
 pub fn list_transcripts(
     include_deleted: Option<bool>,
     state: State<Mutex<AppState>>,

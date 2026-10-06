@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   AppSettings,
+  HardwareHints,
   OllamaInstallStatus,
   OllamaModel,
   OllamaStatus,
@@ -17,6 +18,10 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
 
 export async function getDataDir(): Promise<string> {
   return invoke("get_data_dir");
+}
+
+export async function getHardwareHints(): Promise<HardwareHints> {
+  return invoke("get_hardware_hints");
 }
 
 export async function setStorageDirectory(path: string): Promise<string> {
