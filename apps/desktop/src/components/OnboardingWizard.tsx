@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -21,18 +22,54 @@ import {
   type TextModelOption,
 } from "../lib/modelRecommendations";
 import { normalizeSettings } from "../lib/settings";
-import type { AppSettings, HardwareHints, OllamaModel } from "../types";
+import type {
+  AppSettings,
+  HardwareHints,
+  OllamaModel,
+  OllamaPullProgress,
+} from "../types";
 
 const STEPS = [
   "Welcome",
   "Storage",
   "Install Ollama",
   "Connect",
-  "Pull model",
+  "Download model",
   "Test & finish",
 ] as const;
 
 const DEFAULT_MODEL = "llama3.2";
+const PULL_PROGRESS_EVENT = "ollama-pull-progress";
+
+function formatElapsed(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function formatBytes(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} GB`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)} MB`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)} KB`;
+  return `${n} B`;
+}
+
+function pullStatusLabel(status: string): string {
+  switch (status) {
+    case "pulling manifest":
+      return "Fetching model info…";
+    case "downloading":
+      return "Downloading layers…";
+    case "verifying sha256 digest":
+      return "Verifying download…";
+    case "writing manifest":
+      return "Saving model…";
+    case "success":
+      return "Download complete";
+    default:
+      return status.replace(/_/g, " ");
+  }
+}
 
 interface Props {
   settings: AppSettings;
@@ -61,6 +98,10 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [ollamaInstalled, setOllamaInstalled] = useState<boolean | null>(null);
   const [connected, setConnected] = useState(false);
   const installAttempted = useRef(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadStartedAt, setDownloadStartedAt] = useState<number | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [pullProgress, setPullProgress] = useState<OllamaPullProgress | null>(null);
 
   const hardwareSummary = useMemo(() => {
     if (!hardware) return null;
@@ -109,6 +150,27 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     }
     void ensureOllamaInstalled();
   }, [step]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    void listen<OllamaPullProgress>(PULL_PROGRESS_EVENT, (event) => {
+      setPullProgress(event.payload);
+    }).then((fn) => {
+      unlisten = fn;
+    });
+    return () => {
+      unlisten?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (downloadStartedAt === null) return;
+    setElapsedSec(0);
+    const id = window.setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - downloadStartedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [downloadStartedAt]);
 
   const goToStep = (next: number) => {
     setStatus(null);
@@ -210,18 +272,23 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     setModel(option.id);
   };
 
-  const pullModel = async () => {
+  const downloadModel = async () => {
     setBusy(true);
-    setStatus("Pulling model (this may take several minutes)…");
+    setDownloading(true);
+    setStatus(null);
+    setPullProgress(null);
+    setDownloadStartedAt(Date.now());
     try {
       const msg = await ollamaPullModel(model, baseUrl);
-      setStatus(msg || `Pulled ${model}`);
+      setStatus(msg === "success" ? `Downloaded ${model}` : msg || `Downloaded ${model}`);
       const list = await ollamaListModels(baseUrl);
       setModels(list);
     } catch (e) {
       setStatus(formatInvokeError(e));
     } finally {
       setBusy(false);
+      setDownloading(false);
+      setDownloadStartedAt(null);
     }
   };
 
@@ -245,6 +312,13 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       setBusy(false);
     }
   };
+
+  const completed = pullProgress?.completed ?? null;
+  const total = pullProgress?.total ?? null;
+  const progressPct =
+    completed != null && total != null && total > 0
+      ? Math.min(100, Math.round((completed / total) * 100))
+      : null;
 
   const optionFits = (option: TextModelOption) =>
     hardwareSummary?.fits.some((m) => m.id === option.id) ?? true;
@@ -303,7 +377,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
         <section className="onboarding-step" aria-labelledby="onboarding-step-0">
           <p id="onboarding-step-0">
             This wizard helps you pick a storage folder, install Ollama if needed,
-            pull a text model for summaries, and verify everything works before you
+            download a text model for summaries, and verify everything works before you
             record.
           </p>
           <div className="row onboarding-actions single">
@@ -431,7 +505,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
       {step === 4 && (
         <section className="onboarding-step" aria-labelledby="onboarding-step-4">
-          <h2 id="onboarding-step-4" className="onboarding-step-title">Pull a text model</h2>
+          <h2 id="onboarding-step-4" className="onboarding-step-title">Download model</h2>
           {hardwareSummary ? (
             <p className="muted hardware-summary">
               About <strong>{formatDiskGb(hardwareSummary.diskGbFree)}</strong> free on
@@ -455,7 +529,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
             <p className="muted">Checking disk and memory…</p>
           )}
 
-          <fieldset className="model-options">
+          <fieldset className="model-options" disabled={downloading}>
             <legend>Choose a text model</legend>
             {TEXT_MODEL_OPTIONS.map((option) => {
               const fits = optionFits(option);
@@ -468,7 +542,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
                     type="radio"
                     name="text-model"
                     checked={!customModel && model === option.id}
-                    disabled={!fits}
+                    disabled={!fits || downloading}
                     onChange={() => selectPreset(option)}
                   />
                   <span className="model-option-body">
@@ -493,6 +567,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
             <input
               type="checkbox"
               checked={customModel}
+              disabled={downloading}
               onChange={(e) => setCustomModel(e.target.checked)}
             />
             Use a custom model name
@@ -500,19 +575,63 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
 
           {customModel && (
             <label>
-              Model to pull & use
-              <input value={model} onChange={(e) => setModel(e.target.value)} />
+              Model to download & use
+              <input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                disabled={downloading}
+              />
             </label>
           )}
 
-          <button type="button" onClick={pullModel} disabled={busy || !model.trim()}>
-            Pull model
+          <button
+            type="button"
+            onClick={downloadModel}
+            disabled={busy || downloading || !model.trim()}
+          >
+            {downloading ? "Downloading…" : "Download model"}
           </button>
+          {downloading && (
+            <div className="download-progress" aria-live="polite">
+              <div className="download-progress-header">
+                <span className="download-progress-label">
+                  Downloading <strong>{model}</strong>
+                </span>
+                <span className="download-progress-timer mono">{formatElapsed(elapsedSec)}</span>
+              </div>
+              <div
+                className={`download-progress-bar${progressPct == null ? " indeterminate" : ""}`}
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progressPct ?? undefined}
+              >
+                {progressPct != null && (
+                  <div
+                    className="download-progress-fill"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                )}
+              </div>
+              <p className="muted small download-progress-detail">
+                {pullProgress
+                  ? pullStatusLabel(pullProgress.status)
+                  : "Starting download…"}
+                {completed != null && total != null && total > 0 && (
+                  <>
+                    {" "}
+                    · {formatBytes(completed)} / {formatBytes(total)}
+                    {progressPct != null && ` (${progressPct}%)`}
+                  </>
+                )}
+              </p>
+            </div>
+          )}
           {models.length > 0 && (
             <p className="muted">Installed: {models.map((m) => m.name).join(", ")}</p>
           )}
-          {status && <p className="status">{status}</p>}
-          {stepActions(3, () => goToStep(5))}
+          {status && !downloading && <p className="status">{status}</p>}
+          {stepActions(3, () => goToStep(5), "Continue", downloading)}
         </section>
       )}
 
