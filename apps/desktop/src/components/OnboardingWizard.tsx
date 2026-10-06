@@ -32,6 +32,15 @@ interface Props {
   onComplete: (settings: AppSettings) => void;
 }
 
+function fileUrlForPath(path: string) {
+  const normalized = path.replace(/\\/g, "/");
+  const encoded = normalized
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return normalized.startsWith("/") ? `file://${encoded}` : `file:///${encoded}`;
+}
+
 export function OnboardingWizard({ settings, onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [baseUrl, setBaseUrl] = useState(settings.ollama_base_url);
@@ -41,6 +50,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [storageDir, setStorageDir] = useState("");
   const [ollamaInstalled, setOllamaInstalled] = useState<boolean | null>(null);
+  const [connected, setConnected] = useState(false);
   const installAttempted = useRef(false);
 
   useEffect(() => {
@@ -61,6 +71,11 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     }
     void ensureOllamaInstalled();
   }, [step]);
+
+  const goToStep = (next: number) => {
+    setStatus(null);
+    setStep(next);
+  };
 
   const ensureOllamaInstalled = async () => {
     setBusy(true);
@@ -112,7 +127,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     try {
       const msg = await setStorageDirectory(storageDir.trim());
       setStatus(msg);
-      setStep(2);
+      goToStep(2);
     } catch (e) {
       setStatus(formatInvokeError(e));
     } finally {
@@ -138,9 +153,11 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
   const checkConnection = async () => {
     setBusy(true);
     setStatus(null);
+    setConnected(false);
     try {
       const res = await ollamaCheckConnection(baseUrl);
       setStatus(res.message);
+      setConnected(res.connected);
       if (res.connected) {
         const list = await ollamaListModels(baseUrl);
         setModels(list);
@@ -186,36 +203,72 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
     }
   };
 
+  const stepActions = (
+    back: number | null,
+    forward: () => void,
+    forwardLabel = "Continue",
+    forwardDisabled = false,
+  ) => (
+    <div className="row onboarding-actions">
+      {back !== null ? (
+        <button type="button" className="ghost" onClick={() => goToStep(back)}>
+          Back
+        </button>
+      ) : (
+        <span />
+      )}
+      <button type="button" onClick={forward} disabled={forwardDisabled || busy}>
+        {forwardLabel}
+      </button>
+    </div>
+  );
+
   return (
     <div className="panel onboarding">
       <h1>
         Welcome to Note<span className="gradient">Stack</span>
       </h1>
-      <p className="muted">
+      <p className="muted onboarding-lead">
         Local-first meeting notes powered by Ollama on your Mac. You choose where
         transcripts, summaries, and recordings are stored.
       </p>
-      <ol className="stepper">
+      <ol className="stepper" aria-label="Setup progress">
         {STEPS.map((label, i) => (
-          <li key={label} className={i === step ? "active" : i < step ? "done" : ""}>
-            {label}
+          <li
+            key={label}
+            className={i === step ? "active" : i < step ? "done" : ""}
+          >
+            {i < step ? (
+              <button
+                type="button"
+                className="stepper-link"
+                onClick={() => goToStep(i)}
+              >
+                {label}
+              </button>
+            ) : (
+              label
+            )}
           </li>
         ))}
       </ol>
 
       {step === 0 && (
-        <section>
-          <p>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-0">
+          <p id="onboarding-step-0">
             This wizard helps you pick a storage folder, install Ollama if needed,
-            pull a text model for summaries, and verify everything works before
-            you record.
+            pull a text model for summaries, and verify everything works before you
+            record.
           </p>
-          <button type="button" onClick={() => setStep(1)}>Get started</button>
+          <div className="row onboarding-actions single">
+            <button type="button" onClick={() => goToStep(1)}>Get started</button>
+          </div>
         </section>
       )}
 
       {step === 1 && (
-        <section>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-1">
+          <h2 id="onboarding-step-1" className="onboarding-step-title">Storage folder</h2>
           <p>
             Transcripts, AI summaries, and audio recordings are saved under the
             folder you choose. You can change this later in Settings before your
@@ -225,19 +278,35 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
             Storage folder
             <input
               readOnly
+              className="storage-path"
               value={storageDir}
               placeholder="Choose a folder…"
             />
           </label>
-          <div className="row">
+          <div className="row tight">
             <button type="button" className="secondary" onClick={chooseStorageFolder}>
               Choose folder…
             </button>
+            {storageDir && (
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => void openUrl(fileUrlForPath(storageDir))}
+              >
+                Open in Finder
+              </button>
+            )}
           </div>
           {status && <p className="status">{status}</p>}
-          <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(0)}>Back</button>
-            <button type="button" onClick={applyStorageFolder} disabled={busy || !storageDir}>
+          <div className="row onboarding-actions">
+            <button type="button" className="ghost" onClick={() => goToStep(0)}>
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={applyStorageFolder}
+              disabled={busy || !storageDir}
+            >
               Continue
             </button>
           </div>
@@ -245,7 +314,8 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       )}
 
       {step === 2 && (
-        <section>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-2">
+          <h2 id="onboarding-step-2" className="onboarding-step-title">Install Ollama</h2>
           <p>
             NoteStack uses Ollama on your Mac for summaries and transcription.
             If Ollama is not installed, we run the official install command
@@ -258,37 +328,34 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
               <code>localhost:11434</code>.
             </p>
           )}
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => openUrl("https://ollama.com/download")}
-          >
-            Open Ollama download page
-          </button>
-          <button
-            type="button"
-            onClick={retryOllamaInstall}
-            disabled={busy}
-          >
-            {ollamaInstalled ? "Re-run install / start Ollama" : "Retry install"}
-          </button>
-          {status && <p className="status">{status}</p>}
-          <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(1)}>Back</button>
-            <button type="button" onClick={() => setStep(3)} disabled={busy}>
-              Continue
+          <div className="row tight">
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => openUrl("https://ollama.com/download")}
+            >
+              Open Ollama download page
+            </button>
+            <button type="button" onClick={retryOllamaInstall} disabled={busy}>
+              {ollamaInstalled ? "Re-run install / start Ollama" : "Retry install"}
             </button>
           </div>
+          {status && <p className="status">{status}</p>}
+          {stepActions(1, () => goToStep(3), "Continue", busy)}
         </section>
       )}
 
       {step === 3 && (
-        <section>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-3">
+          <h2 id="onboarding-step-3" className="onboarding-step-title">Connect to Ollama</h2>
           <label>
             Ollama API URL
             <input
               value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
+              onChange={(e) => {
+                setBaseUrl(e.target.value);
+                setConnected(false);
+              }}
               placeholder="http://localhost:11434"
             />
           </label>
@@ -296,15 +363,29 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
             Test connection
           </button>
           {status && <p className="status">{status}</p>}
-          <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(2)}>Back</button>
-            <button type="button" onClick={() => setStep(4)}>Continue</button>
+          {!connected && (
+            <p className="muted small">
+              Test the connection to continue. Ollama must be running at the URL above.
+            </p>
+          )}
+          <div className="row onboarding-actions">
+            <button type="button" className="ghost" onClick={() => goToStep(2)}>
+              Back
+            </button>
+            <button
+              type="button"
+              disabled={!connected || busy}
+              onClick={() => goToStep(4)}
+            >
+              Continue
+            </button>
           </div>
         </section>
       )}
 
       {step === 4 && (
-        <section>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-4">
+          <h2 id="onboarding-step-4" className="onboarding-step-title">Pull a text model</h2>
           <label>
             Model to pull & use (e.g. llama3.2)
             <input value={model} onChange={(e) => setModel(e.target.value)} />
@@ -316,22 +397,23 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
             <p className="muted">Installed: {models.map((m) => m.name).join(", ")}</p>
           )}
           {status && <p className="status">{status}</p>}
-          <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(3)}>Back</button>
-            <button type="button" onClick={() => setStep(5)}>Continue</button>
-          </div>
+          {stepActions(3, () => goToStep(5))}
         </section>
       )}
 
       {step === 5 && (
-        <section>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-5">
+          <h2 id="onboarding-step-5" className="onboarding-step-title">Test & finish</h2>
           <p>Run a quick generation test with <strong>{model}</strong>.</p>
           <button type="button" onClick={testAndFinish} disabled={busy}>
             Test & finish setup
           </button>
           {status && <p className="status">{status}</p>}
-          <div className="row">
-            <button type="button" className="ghost" onClick={() => setStep(4)}>Back</button>
+          <div className="row onboarding-actions">
+            <button type="button" className="ghost" onClick={() => goToStep(4)}>
+              Back
+            </button>
+            <span />
           </div>
         </section>
       )}
