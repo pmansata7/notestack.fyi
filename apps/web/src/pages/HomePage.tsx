@@ -1,6 +1,5 @@
 import { DownloadButton } from '../components/DownloadButton'
 import { GeminiMark } from '../components/GeminiMark'
-import { WaitlistForm } from '../components/WaitlistForm'
 
 const privacyPillars = [
   {
@@ -374,12 +373,10 @@ function DownloadSection() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[var(--color-gemini-text-secondary)]">
             Download NoteStack for Mac, set up Ollama once, and keep every transcript on your machine.
-            The .dmg installer will be available here when we ship.
           </p>
           <div className="mt-8">
             <DownloadButton size="large" />
           </div>
-          <WaitlistForm />
           <p className="mt-6 text-xs text-[var(--color-gemini-text-muted)]">
             Requires macOS 13+ and Ollama · Universal build for Apple Silicon and Intel
           </p>
