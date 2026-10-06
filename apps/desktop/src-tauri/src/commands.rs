@@ -333,9 +333,9 @@ pub fn ollama_is_installed() -> Result<OllamaInstallStatus, CommandError> {
     Ok(OllamaInstallStatus {
         installed,
         message: if installed {
-            "Ollama CLI is installed.".into()
+            "Ollama is installed.".into()
         } else {
-            "Ollama was not found on PATH. You can install it automatically.".into()
+            "Ollama was not found. You can install it automatically or from ollama.com/download.".into()
         },
     })
 }

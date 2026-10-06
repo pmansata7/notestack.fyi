@@ -12,6 +12,7 @@ import {
   saveSettings,
   setStorageDirectory,
 } from "../api";
+import { formatInvokeError } from "../lib/errors";
 import { normalizeSettings } from "../lib/settings";
 import type { AppSettings, OllamaModel } from "../types";
 
@@ -97,7 +98,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       setOllamaInstalled(after.installed);
       setStatus(msg);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatus(formatInvokeError(e));
       setOllamaInstalled(false);
     } finally {
       setBusy(false);
@@ -128,7 +129,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       setStatus(msg);
       goToStep(2);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatus(formatInvokeError(e));
     } finally {
       setBusy(false);
     }
@@ -143,7 +144,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       setOllamaInstalled(after.installed);
       setStatus(msg);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatus(formatInvokeError(e));
     } finally {
       setBusy(false);
     }
@@ -175,7 +176,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       const list = await ollamaListModels(baseUrl);
       setModels(list);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatus(formatInvokeError(e));
     } finally {
       setBusy(false);
     }
@@ -196,7 +197,7 @@ export function OnboardingWizard({ settings, onComplete }: Props) {
       await saveSettings(next);
       onComplete(next);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatus(formatInvokeError(e));
     } finally {
       setBusy(false);
     }
