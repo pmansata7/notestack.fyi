@@ -56,6 +56,12 @@ export interface OllamaStatus {
   message: string;
 }
 
+export interface OllamaPullProgress {
+  status: string;
+  completed?: number | null;
+  total?: number | null;
+}
+
 export interface HardwareHints {
   available_disk_bytes: number;
   total_memory_bytes: number;

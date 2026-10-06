@@ -373,11 +373,18 @@ pub fn ollama_list_models(base_url: Option<String>) -> Result<Vec<crate::ollama:
 
 #[tauri::command]
 pub fn ollama_pull_model(
+    app: tauri::AppHandle,
     model: String,
     base_url: Option<String>,
 ) -> Result<String, CommandError> {
+    use tauri::Emitter;
+
     let client = OllamaClient::new(base_url);
-    client.pull_model(&model).map_err(map_err)
+    client
+        .pull_model(&model, |progress| {
+            let _ = app.emit("ollama-pull-progress", progress);
+        })
+        .map_err(map_err)
 }
 
 #[tauri::command]
