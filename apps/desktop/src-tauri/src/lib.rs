@@ -2,6 +2,7 @@ mod commands;
 mod db;
 mod ollama;
 mod state;
+mod system;
 
 use state::{app_data_dir, AppState};
 use std::sync::Mutex;
@@ -18,6 +19,7 @@ pub fn run() {
             commands::get_settings,
             commands::save_settings,
             commands::get_data_dir,
+            commands::get_hardware_hints,
             commands::list_transcripts,
             commands::search_transcripts,
             commands::get_transcript,
