@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { GeminiMark } from './GeminiMark'
+import { NoteStackLogo } from './NoteStackLogo'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -16,10 +16,7 @@ export function Header() {
           to="/"
           className="flex min-w-0 items-center gap-2.5 rounded-lg outline-offset-4 focus-visible:outline-2 focus-visible:outline-[var(--color-gemini-blue)]"
         >
-          <GeminiMark size={32} />
-          <span className="truncate text-lg font-normal tracking-tight text-[var(--color-gemini-text)]">
-            Note<span className="gemini-gradient-text font-medium">Stack</span>
-          </span>
+          <NoteStackLogo height={28} className="h-7 w-auto max-w-[min(100%,11rem)]" />
         </Link>
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <a href="/#features" className="gemini-nav-link hidden sm:inline">

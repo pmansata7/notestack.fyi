@@ -94,6 +94,13 @@ body {
   color: #1f1f1f;
 }
 
+.brand-logo {
+  display: block;
+  height: 1.625rem;
+  width: auto;
+  max-width: 10.5rem;
+}
+
 .brand-plus {
   background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
   -webkit-background-clip: text;
@@ -587,6 +594,63 @@ button:disabled {
 .stepper li.done {
   background: var(--gemini-blue-soft);
   color: #0842a0;
+}
+
+.stepper li .stepper-link {
+  all: unset;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.stepper li .stepper-link:hover {
+  text-decoration: underline;
+}
+
+.onboarding-lead {
+  margin: 0;
+  max-width: 36rem;
+}
+
+.onboarding-step {
+  margin-top: 0.25rem;
+}
+
+.onboarding-step-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #1f1f1f;
+}
+
+.onboarding-actions {
+  margin-top: 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.onboarding-actions.single {
+  justify-content: flex-start;
+}
+
+.onboarding-actions .row.tight {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.storage-path {
+  margin: 1rem 0 0.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--gemini-bg-soft);
+  border: 1px solid var(--gemini-border);
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  word-break: break-all;
+  color: var(--text-secondary);
+}
+
+.onboarding .small {
+  font-size: 0.85rem;
 }
 
 .floating-pane {

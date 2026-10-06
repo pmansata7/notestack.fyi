@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+  <path
+    d="M7 9h31.2l3.8 7.2H10.8L7 9z"
+    fill="var(--notestack-bar, #f4f6fa)"
+    stroke="var(--notestack-bar-stroke, #e2e8f0)"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M7 20h12.4l3.8 7.2H7V20z"
+    fill="var(--notestack-accent, #9580ff)"
+  />
+  <path
+    d="M19.4 20h19l3.6 7.2H23.2L19.4 20z"
+    fill="var(--notestack-bar, #f4f6fa)"
+    stroke="var(--notestack-bar-stroke, #e2e8f0)"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M7 31h31.2l3.8 7.2H10.8L7 31z"
+    fill="var(--notestack-bar, #f4f6fa)"
+    stroke="var(--notestack-bar-stroke, #e2e8f0)"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+</svg>
