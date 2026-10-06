@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { GeminiMark } from '../components/GeminiMark'
+import { NoteStackMark } from '../components/NoteStackMark'
 
 export function PrivacyPage() {
   return (
@@ -10,7 +10,7 @@ export function PrivacyPage() {
             ← Back to home
           </Link>
           <div className="mt-6 flex items-start gap-4">
-            <GeminiMark size={36} className="mt-1 shrink-0" />
+            <NoteStackMark size={36} className="mt-1 shrink-0" variant="light" />
             <div>
               <h1 className="text-4xl font-normal tracking-tight text-[var(--color-gemini-text)]">
                 Privacy Policy

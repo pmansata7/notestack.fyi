@@ -1,6 +1,7 @@
 use crate::db::Database;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 pub struct AppState {
@@ -192,17 +193,61 @@ impl AppSettings {
 
 const APP_DATA_DIR_NAME: &str = "NoteStack";
 const LEGACY_APP_DATA_DIR_NAME: &str = "Record Plus";
+const BOOTSTRAP_FILE: &str = "bootstrap.json";
 
-pub fn app_data_dir() -> PathBuf {
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+struct BootstrapConfig {
+    data_directory: Option<String>,
+}
+
+/// Application support folder (holds bootstrap.json; default data lives here too).
+pub fn bootstrap_dir() -> PathBuf {
     if let Some(parent) = dirs_data_local() {
         let new_dir = parent.join(APP_DATA_DIR_NAME);
         let legacy_dir = parent.join(LEGACY_APP_DATA_DIR_NAME);
         if !new_dir.exists() && legacy_dir.is_dir() {
-            let _ = std::fs::rename(&legacy_dir, &new_dir);
+            let _ = fs::rename(&legacy_dir, &new_dir);
         }
         return new_dir;
     }
     std::env::temp_dir().join("notestack")
+}
+
+pub fn read_bootstrap_config() -> BootstrapConfig {
+    let path = bootstrap_dir().join(BOOTSTRAP_FILE);
+    if !path.is_file() {
+        return BootstrapConfig::default();
+    }
+    match fs::read_to_string(&path) {
+        Ok(raw) => serde_json::from_str(&raw).unwrap_or_default(),
+        Err(_) => BootstrapConfig::default(),
+    }
+}
+
+pub fn write_data_dir_override(path: &Path) -> Result<(), String> {
+    let dir = bootstrap_dir();
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let config = BootstrapConfig {
+        data_directory: Some(path.to_string_lossy().to_string()),
+    };
+    let body = serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?;
+    fs::write(dir.join(BOOTSTRAP_FILE), body).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub fn resolve_data_dir() -> PathBuf {
+    let config = read_bootstrap_config();
+    if let Some(ref custom) = config.data_directory {
+        let trimmed = custom.trim();
+        if !trimmed.is_empty() {
+            return PathBuf::from(trimmed);
+        }
+    }
+    bootstrap_dir()
+}
+
+pub fn app_data_dir() -> PathBuf {
+    resolve_data_dir()
 }
 
 fn dirs_data_local() -> Option<PathBuf> {

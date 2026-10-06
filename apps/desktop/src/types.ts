@@ -56,6 +56,17 @@ export interface OllamaStatus {
   message: string;
 }
 
+export interface HardwareHints {
+  available_disk_bytes: number;
+  total_memory_bytes: number;
+  available_memory_bytes: number;
+}
+
+export interface OllamaInstallStatus {
+  installed: boolean;
+  message: string;
+}
+
 export const MEETING_TEMPLATES: { id: string; label: string }[] = [
   { id: "general", label: "General meeting" },
   { id: "one_on_one", label: "1:1" },
