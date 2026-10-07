@@ -4,7 +4,7 @@ import { NoteStackMark } from '../components/NoteStackMark'
 export function PrivacyPage() {
   return (
     <>
-      <div className="border-b border-[var(--color-ns-border-strong)] bg-[var(--color-ns-bg-muted)]">
+      <div className="border-b border-[var(--color-ns-border)] bg-[var(--color-ns-bg-elevated)]">
         <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
           <Link to="/" className="ns-text-link text-sm">
             ← Back to home
@@ -12,8 +12,8 @@ export function PrivacyPage() {
           <div className="mt-6 flex items-start gap-4">
             <NoteStackMark size={36} className="mt-1 shrink-0" variant="light" />
             <div>
-              <h1 className="ns-display text-4xl text-[var(--color-ns-text)]">Privacy Policy</h1>
-              <p className="mt-2 font-mono text-xs uppercase tracking-wider text-[var(--color-ns-text-muted)]">
+              <h1 className="ns-display text-4xl">Privacy Policy</h1>
+              <p className="mt-2 text-sm text-[var(--color-ns-text-muted)]">
                 Last updated: October 3, 2026
               </p>
             </div>

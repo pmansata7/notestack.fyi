@@ -14,7 +14,7 @@ const footerLinks: FooterLink[] = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-[var(--color-ns-border-strong)] bg-[var(--color-ns-bg-muted)]">
+    <footer className="border-t border-[var(--color-ns-border)] bg-[var(--color-ns-bg-elevated)]">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex max-w-md items-start gap-3">

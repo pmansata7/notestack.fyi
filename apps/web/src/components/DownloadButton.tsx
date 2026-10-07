@@ -41,7 +41,7 @@ export function DownloadButton({ className = '', size = 'default' }: DownloadBut
     >
       <AppleIcon />
       Download for Mac
-      <span className="border border-[#faf8f3]/40 px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-wide">
+      <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">
         {loading ? '…' : 'Soon'}
       </span>
     </a>
