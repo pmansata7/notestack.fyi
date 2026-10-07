@@ -1,32 +1,35 @@
 :root {
-  font-family: "Google Sans", "Roboto", system-ui, -apple-system, sans-serif;
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
-  color: #1f1f1f;
-  background: #ffffff;
-  --gemini-blue: #0b57d0;
-  --gemini-blue-hover: #0842a0;
-  --gemini-blue-soft: #d3e3fd;
-  --gemini-bg-soft: #f0f4f9;
-  --gemini-bg-muted: #e9eef6;
-  --gemini-border: #dde3ea;
-  --gemini-danger: #b3261e;
-  --gemini-danger-soft: #fce8e6;
-  --gemini-success-soft: #e6f4ea;
-  --gemini-success-text: #137333;
-  --gemini-warn-soft: #fef7e0;
-  --gemini-warn-text: #b06000;
-  --panel: #ffffff;
-  --muted: #5f6368;
-  --text-secondary: #444746;
-  --border: var(--gemini-border);
+  color: #1a1814;
+  background: #f4f0e6;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --gemini-blue: #c44d2a;
+  --gemini-blue-hover: #9e3a1c;
+  --gemini-blue-soft: #f0ddd5;
+  --gemini-bg-soft: #f4f0e6;
+  --gemini-bg-muted: #e8e2d6;
+  --gemini-border: #c9c2b4;
+  --gemini-ink: #1a1814;
+  --gemini-danger: #9e3a1c;
+  --gemini-danger-soft: #f0ddd5;
+  --gemini-success-soft: #e0ebe4;
+  --gemini-success-text: #1a4d38;
+  --gemini-warn-soft: #f5ead8;
+  --gemini-warn-text: #7a4a12;
+  --panel: #faf8f3;
+  --muted: #6b655c;
+  --text-secondary: #4a453c;
+  --border: #1a1814;
   --danger: var(--gemini-danger);
   --accent: var(--gemini-blue);
-  --radius-pill: 999px;
-  --radius-lg: 24px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
-  --shadow-soft: 0 1px 3px rgba(60, 64, 67, 0.12);
-  --shadow-elevated: 0 12px 40px rgba(60, 64, 67, 0.16);
+  --radius-pill: 4px;
+  --radius-lg: 4px;
+  --radius-md: 4px;
+  --radius-sm: 4px;
+  --shadow-soft: none;
+  --shadow-elevated: 4px 4px 0 #1a1814;
 }
 
 * {
@@ -46,7 +49,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--gemini-bg-soft);
 }
 
 .app.loading {
@@ -82,7 +85,7 @@ body {
   justify-content: space-between;
   padding: 0.65rem 1rem 0.65rem 1.25rem;
   background: var(--panel);
-  border-bottom: 1px solid var(--gemini-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .brand {
@@ -102,11 +105,8 @@ body {
 }
 
 .brand-plus {
-  background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 500;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 nav {
@@ -127,11 +127,12 @@ nav {
   grid-template-columns: 300px 1fr;
   min-height: 0;
   background: var(--gemini-bg-soft);
+  border-top: 1px solid var(--border);
 }
 
 .sidebar {
-  border-right: 1px solid var(--gemini-border);
-  background: var(--gemini-bg-soft);
+  border-right: 1px solid var(--border);
+  background: var(--gemini-bg-muted);
   padding: 1rem 0.75rem;
   overflow: auto;
   display: flex;
@@ -151,7 +152,7 @@ nav {
 .content {
   padding: 1.5rem 2rem;
   overflow: auto;
-  background: #ffffff;
+  background: var(--panel);
 }
 
 .panel {
@@ -159,8 +160,8 @@ nav {
   margin: 0 auto;
   padding: 2rem 2.25rem;
   background: var(--panel);
-  border-radius: 28px;
-  border: 1px solid var(--gemini-border);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
 }
 
@@ -191,11 +192,10 @@ nav {
 }
 
 .panel h1 .gradient {
-  background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 500;
+  color: var(--accent);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
 }
 
 .record-bar {
@@ -205,10 +205,10 @@ nav {
 .record-btn {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 999px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   background: var(--gemini-blue);
-  color: white;
+  color: #faf8f3;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -266,7 +266,7 @@ nav {
   text-align: left;
   padding: 0.7rem 0.85rem;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: var(--radius-sm);
   background: transparent;
   cursor: pointer;
   display: flex;
@@ -366,12 +366,11 @@ label.inline {
 
 .detail.empty .gemini-greeting {
   margin: 1rem 0 0.35rem;
+  font-family: var(--font-serif);
   font-size: 2.75rem;
   font-weight: 400;
-  background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-style: italic;
+  color: var(--gemini-ink);
 }
 
 .detail.empty p {
@@ -420,10 +419,10 @@ textarea {
 
 button {
   padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   background: var(--gemini-blue);
-  color: white;
+  color: #faf8f3;
   font: inherit;
   font-weight: 500;
   font-size: 0.9rem;
@@ -662,7 +661,7 @@ button:disabled {
 .download-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--gemini-blue), #5b9bff);
+  background: var(--gemini-blue);
   transition: width 0.25s ease;
 }
 
@@ -672,7 +671,8 @@ button:disabled {
   inset: 0;
   width: 40%;
   border-radius: inherit;
-  background: linear-gradient(90deg, transparent, var(--gemini-blue), transparent);
+  background: var(--gemini-blue);
+  opacity: 0.35;
   animation: download-indeterminate 1.4s ease-in-out infinite;
 }
 
@@ -727,7 +727,7 @@ button:disabled {
   max-height: 70vh;
   overflow: auto;
   background: var(--panel);
-  border: 1px solid var(--gemini-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-elevated);
   padding: 1rem 1.1rem 1.1rem;

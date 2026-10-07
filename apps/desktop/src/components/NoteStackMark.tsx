@@ -25,14 +25,14 @@ export function NoteStackMark({
       style={
         isDark
           ? ({
-              "--notestack-bar": "#ffffff",
+              "--notestack-bar": "#faf8f3",
               "--notestack-bar-stroke": "transparent",
-              "--notestack-accent": "#b59dff",
+              "--notestack-accent": "#e07a52",
             } as CSSProperties)
           : ({
-              "--notestack-bar": "#f4f6fa",
-              "--notestack-bar-stroke": "#e2e8f0",
-              "--notestack-accent": "#9580ff",
+              "--notestack-bar": "#faf8f3",
+              "--notestack-bar-stroke": "#c9c2b4",
+              "--notestack-accent": "#c44d2a",
             } as CSSProperties)
       }
     >

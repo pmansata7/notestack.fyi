@@ -1,19 +1,26 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Google Sans', 'Roboto', ui-sans-serif, system-ui, sans-serif;
-  --color-gemini-bg: #ffffff;
-  --color-gemini-bg-soft: #f0f4f9;
-  --color-gemini-bg-muted: #e9eef6;
-  --color-gemini-surface: #ffffff;
-  --color-gemini-border: #dde3ea;
-  --color-gemini-blue: #0b57d0;
-  --color-gemini-blue-hover: #0842a0;
-  --color-gemini-blue-soft: #d3e3fd;
-  --color-gemini-text: #1f1f1f;
-  --color-gemini-text-secondary: #444746;
-  --color-gemini-text-muted: #5f6368;
-  --color-gemini-chip: #f0f4f9;
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --color-ns-bg: #f4f0e6;
+  --color-ns-bg-elevated: #faf8f3;
+  --color-ns-bg-muted: #e8e2d6;
+  --color-ns-ink: #1a1814;
+  --color-ns-ink-soft: #2f2b24;
+  --color-ns-surface: #faf8f3;
+  --color-ns-border: #c9c2b4;
+  --color-ns-border-strong: #1a1814;
+  --color-ns-accent: #c44d2a;
+  --color-ns-accent-hover: #9e3a1c;
+  --color-ns-accent-soft: #f0ddd5;
+  --color-ns-text: #1a1814;
+  --color-ns-text-secondary: #4a453c;
+  --color-ns-text-muted: #6b655c;
+  --color-ns-chip: #e8e2d6;
+  --radius-ns: 4px;
 }
 
 html {
@@ -23,166 +30,271 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--color-gemini-bg);
-  color: var(--color-gemini-text);
+  background-color: var(--color-ns-bg);
+  color: var(--color-ns-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-.gemini-gradient-text {
-  background: linear-gradient(90deg, #4285f4 0%, #9b72cb 45%, #d96570 85%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.ns-page {
+  background: var(--color-ns-bg);
 }
 
-.gemini-mesh {
-  background:
-    radial-gradient(ellipse 70% 50% at 15% 0%, rgba(66, 133, 244, 0.12), transparent 55%),
-    radial-gradient(ellipse 60% 45% at 85% 10%, rgba(155, 114, 203, 0.1), transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(217, 101, 112, 0.08), transparent 55%),
-    var(--color-gemini-bg);
+.ns-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ns-text-muted);
 }
 
-.gemini-section-heading {
-  font-size: 1.875rem;
+.ns-display {
+  font-family: var(--font-serif);
   font-weight: 400;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.ns-accent-text {
+  color: var(--color-ns-accent);
+}
+
+.ns-section-heading {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--color-ns-ink);
 }
 
 @media (min-width: 640px) {
-  .gemini-section-heading {
-    font-size: 2.25rem;
+  .ns-section-heading {
+    font-size: 2.5rem;
   }
 }
 
-.gemini-section-lead {
+.ns-section-lead {
   margin-top: 1rem;
-  color: var(--color-gemini-text-secondary);
-  line-height: 1.6;
+  max-width: 36rem;
+  color: var(--color-ns-text-secondary);
+  line-height: 1.65;
+  font-size: 1.05rem;
 }
 
-.gemini-card {
-  border-radius: 1.5rem;
-  border: 1px solid var(--color-gemini-border);
-  background: var(--color-gemini-surface);
-  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.05);
+.ns-card {
+  border-radius: var(--radius-ns);
+  border: 1px solid var(--color-ns-border-strong);
+  background: var(--color-ns-surface);
+}
+
+.ns-card-subtle {
+  border-radius: var(--radius-ns);
+  border: 1px solid var(--color-ns-border);
+  background: var(--color-ns-surface);
+}
+
+.ns-card-interactive {
   transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.gemini-card-interactive:hover {
-  border-color: color-mix(in srgb, var(--color-gemini-blue) 22%, var(--color-gemini-border));
-  box-shadow: 0 6px 20px rgba(60, 64, 67, 0.08);
+.ns-card-interactive:hover {
+  background: var(--color-ns-bg-elevated);
+  border-color: var(--color-ns-ink-soft);
 }
 
-.gemini-chip {
-  border-radius: 9999px;
-  background: var(--color-gemini-chip);
-  color: var(--color-gemini-text-secondary);
-  border: 1px solid color-mix(in srgb, var(--color-gemini-border) 80%, transparent);
+.ns-chip {
+  border-radius: var(--radius-ns);
+  background: var(--color-ns-chip);
+  color: var(--color-ns-text-secondary);
+  border: 1px solid var(--color-ns-border);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.gemini-icon-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--color-gemini-blue-soft) 55%, white);
-  color: var(--color-gemini-blue);
-}
-
-.gemini-step-badge {
+.ns-icon-badge {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  flex-shrink: 0;
-  border-radius: 9999px;
-  background: var(--color-gemini-blue-soft);
-  color: var(--color-gemini-blue);
-  font-size: 0.875rem;
-  font-weight: 500;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius-ns);
+  border: 1px solid var(--color-ns-border-strong);
+  background: var(--color-ns-bg);
+  color: var(--color-ns-ink);
 }
 
-.gemini-btn-secondary {
+.ns-step-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-ns);
+  border: 1px solid var(--color-ns-border-strong);
+  background: var(--color-ns-ink);
+  color: var(--color-ns-bg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.ns-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
-  border: 1px solid var(--color-gemini-border);
-  background: white;
-  padding: 0.875rem 2rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--color-gemini-text);
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  gap: 0.5rem;
+  border-radius: var(--radius-ns);
+  border: 1px solid var(--color-ns-border-strong);
+  background: var(--color-ns-accent);
+  padding: 0.875rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #faf8f3;
+  transition: background-color 0.15s ease;
 }
 
-.gemini-btn-secondary:hover {
-  background: var(--color-gemini-chip);
-  border-color: color-mix(in srgb, var(--color-gemini-blue) 18%, var(--color-gemini-border));
+.ns-btn-primary:hover {
+  background: var(--color-ns-accent-hover);
 }
 
-.gemini-btn-secondary:focus-visible {
-  outline: 2px solid var(--color-gemini-blue);
+.ns-btn-primary:focus-visible {
+  outline: 2px solid var(--color-ns-ink);
   outline-offset: 2px;
 }
 
-.gemini-nav-link {
-  border-radius: 9999px;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+.ns-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-ns);
+  border: 1px solid var(--color-ns-border-strong);
+  background: transparent;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  color: var(--color-gemini-text-secondary);
+  color: var(--color-ns-text);
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
 }
 
-.gemini-nav-link:hover {
-  background: var(--color-gemini-chip);
-  color: var(--color-gemini-text);
+.ns-btn-secondary:hover {
+  background: var(--color-ns-ink);
+  color: var(--color-ns-bg);
 }
 
-.gemini-prose-section {
-  border-radius: 1.25rem;
-  border: 1px solid var(--color-gemini-border);
-  background: white;
+.ns-btn-secondary:focus-visible {
+  outline: 2px solid var(--color-ns-accent);
+  outline-offset: 2px;
+}
+
+.ns-nav-link {
+  border-radius: var(--radius-ns);
+  padding: 0.375rem 0.65rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ns-text-secondary);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ns-nav-link:hover {
+  background: var(--color-ns-bg-muted);
+  color: var(--color-ns-text);
+}
+
+.ns-prose-section {
+  border-radius: var(--radius-ns);
+  border: 1px solid var(--color-ns-border);
+  background: var(--color-ns-surface);
   padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.04);
 }
 
 @media (min-width: 640px) {
-  .gemini-prose-section {
+  .ns-prose-section {
     padding: 1.75rem 2rem;
   }
 }
 
-.gemini-prose-section h2 {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--color-gemini-text);
+.ns-prose-section h2 {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--color-ns-text);
 }
 
-.gemini-text-link {
-  color: var(--color-gemini-blue);
-  font-weight: 500;
+.ns-text-link {
+  color: var(--color-ns-accent);
+  font-weight: 600;
   text-underline-offset: 3px;
   transition: color 0.15s ease;
 }
 
-.gemini-text-link:hover {
-  color: var(--color-gemini-blue-hover);
+.ns-text-link:hover {
+  color: var(--color-ns-accent-hover);
   text-decoration: underline;
+}
+
+.ns-hero-grid {
+  display: grid;
+  min-height: min(88vh, 52rem);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .ns-hero-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  }
+}
+
+.ns-hero-panel {
+  background: var(--color-ns-ink);
+  color: #e8e2d6;
+}
+
+.ns-hero-panel .ns-kicker {
+  color: #a39e92;
+}
+
+.ns-hero-panel .ns-section-lead {
+  color: #c9c2b4;
+}
+
+.ns-hero-media {
+  position: relative;
+  min-height: 16rem;
+  border-top: 1px solid var(--color-ns-border-strong);
+  background: var(--color-ns-bg-muted);
+}
+
+@media (min-width: 1024px) {
+  .ns-hero-media {
+    border-top: none;
+    border-left: 1px solid var(--color-ns-border-strong);
+    min-height: auto;
+  }
+}
+
+.ns-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  filter: sepia(0.2) saturate(0.85) hue-rotate(-18deg) contrast(1.02);
+}
+
+.ns-index-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--color-ns-text-muted);
 }
