@@ -24,12 +24,12 @@ export function NoteStackMark({ className = '', size = 28, variant = 'light' }: 
           ? ({
               '--notestack-bar': '#faf8f3',
               '--notestack-bar-stroke': 'transparent',
-              '--notestack-accent': '#e07a52',
+              '--notestack-accent': '#2dd4bf',
             } as CSSProperties)
           : ({
-              '--notestack-bar': '#faf8f3',
-              '--notestack-bar-stroke': '#c9c2b4',
-              '--notestack-accent': '#c44d2a',
+              '--notestack-bar': '#f4f4f5',
+              '--notestack-bar-stroke': '#e4e4e7',
+              '--notestack-accent': '#0f766e',
             } as CSSProperties)
       }
     >

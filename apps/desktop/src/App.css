@@ -1,35 +1,33 @@
 :root {
-  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
-  color: #1a1814;
-  background: #f4f0e6;
-  --font-serif: "Instrument Serif", Georgia, serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-  --gemini-blue: #c44d2a;
-  --gemini-blue-hover: #9e3a1c;
-  --gemini-blue-soft: #f0ddd5;
-  --gemini-bg-soft: #f4f0e6;
-  --gemini-bg-muted: #e8e2d6;
-  --gemini-border: #c9c2b4;
-  --gemini-ink: #1a1814;
-  --gemini-danger: #9e3a1c;
-  --gemini-danger-soft: #f0ddd5;
-  --gemini-success-soft: #e0ebe4;
-  --gemini-success-text: #1a4d38;
-  --gemini-warn-soft: #f5ead8;
-  --gemini-warn-text: #7a4a12;
-  --panel: #faf8f3;
-  --muted: #6b655c;
-  --text-secondary: #4a453c;
-  --border: #1a1814;
+  color: #18181b;
+  background: #f4f4f5;
+  --gemini-blue: #0f766e;
+  --gemini-blue-hover: #0d5f59;
+  --gemini-blue-soft: #ecfdf9;
+  --gemini-bg-soft: #f4f4f5;
+  --gemini-bg-muted: #ececee;
+  --gemini-border: #e4e4e7;
+  --gemini-ink: #18181b;
+  --gemini-danger: #dc2626;
+  --gemini-danger-soft: #fef2f2;
+  --gemini-success-soft: #ecfdf5;
+  --gemini-success-text: #047857;
+  --gemini-warn-soft: #fffbeb;
+  --gemini-warn-text: #b45309;
+  --panel: #ffffff;
+  --muted: #71717a;
+  --text-secondary: #52525b;
+  --border: #e4e4e7;
   --danger: var(--gemini-danger);
   --accent: var(--gemini-blue);
-  --radius-pill: 4px;
-  --radius-lg: 4px;
-  --radius-md: 4px;
-  --radius-sm: 4px;
-  --shadow-soft: none;
-  --shadow-elevated: 4px 4px 0 #1a1814;
+  --radius-pill: 999px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --shadow-soft: 0 1px 2px rgba(24, 24, 27, 0.06);
+  --shadow-elevated: 0 16px 40px -24px rgba(24, 24, 27, 0.35);
 }
 
 * {
@@ -85,7 +83,7 @@ body {
   justify-content: space-between;
   padding: 0.65rem 1rem 0.65rem 1.25rem;
   background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--gemini-border);
 }
 
 .brand {
@@ -127,12 +125,11 @@ nav {
   grid-template-columns: 300px 1fr;
   min-height: 0;
   background: var(--gemini-bg-soft);
-  border-top: 1px solid var(--border);
 }
 
 .sidebar {
-  border-right: 1px solid var(--border);
-  background: var(--gemini-bg-muted);
+  border-right: 1px solid var(--gemini-border);
+  background: var(--gemini-bg-soft);
   padding: 1rem 0.75rem;
   overflow: auto;
   display: flex;
@@ -160,8 +157,8 @@ nav {
   margin: 0 auto;
   padding: 2rem 2.25rem;
   background: var(--panel);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gemini-border);
   box-shadow: var(--shadow-soft);
 }
 
@@ -193,9 +190,7 @@ nav {
 
 .panel h1 .gradient {
   color: var(--accent);
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .record-bar {
@@ -205,10 +200,10 @@ nav {
 .record-btn {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: none;
+  border-radius: var(--radius-pill);
   background: var(--gemini-blue);
-  color: #faf8f3;
+  color: #ffffff;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -366,10 +361,9 @@ label.inline {
 
 .detail.empty .gemini-greeting {
   margin: 1rem 0 0.35rem;
-  font-family: var(--font-serif);
-  font-size: 2.75rem;
-  font-weight: 400;
-  font-style: italic;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--gemini-ink);
 }
 
@@ -419,10 +413,10 @@ textarea {
 
 button {
   padding: 0.55rem 1.1rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
   background: var(--gemini-blue);
-  color: #faf8f3;
+  color: #ffffff;
   font: inherit;
   font-weight: 500;
   font-size: 0.9rem;
@@ -727,7 +721,7 @@ button:disabled {
   max-height: 70vh;
   overflow: auto;
   background: var(--panel);
-  border: 1px solid var(--border);
+  border: 1px solid var(--gemini-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-elevated);
   padding: 1rem 1.1rem 1.1rem;
