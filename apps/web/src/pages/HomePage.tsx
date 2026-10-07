@@ -1,29 +1,31 @@
+import heroImage from '../assets/hero.png'
 import { DownloadButton } from '../components/DownloadButton'
 import { NoteStackMark } from '../components/NoteStackMark'
 
 const privacyPillars = [
   {
+    index: '01',
     title: 'Audio stays on your Mac',
     description:
-      'Recordings are captured and processed locally. We never upload your meeting audio to our servers or third-party clouds.',
+      'Recordings are captured and processed locally. Nothing is uploaded for transcription.',
     icon: 'shield',
   },
   {
+    index: '02',
     title: 'Transcripts on device',
-    description:
-      'Notes and transcripts live in your local storage. You choose what to export, share, or delete.',
+    description: 'Notes live in local storage. Export, share, or delete on your terms.',
     icon: 'disk',
   },
   {
+    index: '03',
     title: 'Local models via Ollama',
-    description:
-      'Summaries and insights run through Ollama on your machine—no API keys sending content to remote LLM providers.',
+    description: 'Summaries run through Ollama on your machine—no remote LLM API keys required.',
     icon: 'cpu',
   },
   {
+    index: '04',
     title: 'You control the stack',
-    description:
-      'Pick your models, manage updates, and disconnect from the network when you need air-gapped peace of mind.',
+    description: 'Pick models, manage updates, and work offline once setup is done.',
     icon: 'lock',
   },
 ]
@@ -32,22 +34,22 @@ const howItWorks = [
   {
     step: '1',
     title: 'Install Ollama',
-    body: 'NoteStack walks you through installing Ollama and pulling a speech or text model that fits your hardware.',
+    body: 'NoteStack checks for Ollama and walks you through pulling a model that fits your Mac.',
   },
   {
     step: '2',
     title: 'Record a meeting',
-    body: 'Start capture from the menu bar. Audio is written to disk on your Mac—nothing streams to the cloud.',
+    body: 'Start capture from the menu bar. Audio is written to disk—nothing streams out.',
   },
   {
     step: '3',
     title: 'Transcribe locally',
-    body: 'On-device transcription turns speech into text without sending audio elsewhere.',
+    body: 'On-device speech-to-text turns audio into text without a cloud hop.',
   },
   {
     step: '4',
     title: 'Summarize with local AI',
-    body: 'Ollama generates action items, summaries, and searchable notes—all offline-capable once models are downloaded.',
+    body: 'Ollama drafts action items and summaries while your data stays on the same machine.',
   },
 ]
 
@@ -80,9 +82,9 @@ const comparisonRows = [
 ]
 
 const quickFeatures = [
-  'Menu bar recording with one click',
-  'Search across local transcripts',
-  'Export notes in standard formats',
+  'Menu bar recording',
+  'Search local transcripts',
+  'Export in standard formats',
 ]
 
 export function HomePage() {
@@ -99,46 +101,36 @@ export function HomePage() {
 
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b border-[var(--color-gemini-border)]">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-80"
-        aria-hidden
-        style={{
-          background:
-            'radial-gradient(ellipse 55% 45% at 50% -10%, rgba(66, 133, 244, 0.14), transparent 60%)',
-        }}
-      />
-      <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-8 flex justify-center">
-            <NoteStackMark size={56} variant="light" />
+    <section className="border-b border-[var(--color-ns-border-strong)]">
+      <div className="ns-hero-grid">
+        <div className="ns-hero-panel flex flex-col justify-between px-6 py-14 sm:px-10 sm:py-16 lg:px-14 lg:py-20">
+          <div>
+            <p className="ns-kicker mb-8">Local AI · macOS · No upload</p>
+            <h1 className="ns-display text-[2.75rem] sm:text-[3.25rem] lg:text-[3.75rem]">
+              Meeting notes
+              <br />
+              <span className="italic text-[#f0ddd5]">that never leave</span>
+              <br />
+              your Mac
+            </h1>
+            <p className="ns-section-lead mt-8 max-w-md">
+              NoteStack records, transcribes, and summarizes with{' '}
+              <strong className="font-semibold text-[#faf8f3]">Ollama</strong>—the whole loop on your
+              hardware.
+            </p>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <DownloadButton size="large" />
+              <a href="#how-it-works" className="ns-btn-secondary w-full border-[#5c5850] text-[#e8e2d6] sm:w-auto">
+                How it works
+              </a>
+            </div>
           </div>
-          <p className="gemini-chip mb-6 inline-flex items-center gap-2 px-4 py-1.5 text-xs font-medium tracking-wide">
-            <span className="text-[var(--color-gemini-blue)]">Privacy-first</span>
-            <span className="text-[var(--color-gemini-text-muted)]" aria-hidden>·</span>
-            <span>Local AI</span>
-            <span className="text-[var(--color-gemini-text-muted)]" aria-hidden>·</span>
-            <span>macOS</span>
+          <p className="mt-12 text-xs leading-relaxed text-[#8a8478]">
+            macOS 13+ and Ollama · No account · Audio stays local
           </p>
-          <h1 className="text-4xl font-normal tracking-tight sm:text-5xl lg:text-6xl">
-            <span className="gemini-gradient-text font-medium">Meeting notes</span>
-            <br />
-            that never leave your Mac
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-[var(--color-gemini-text-secondary)] sm:text-xl">
-            NoteStack captures conversations, transcribes on device, and summarizes with{' '}
-            <strong className="font-medium text-[var(--color-gemini-text)]">Ollama</strong>—a
-            Gemini-like experience powered entirely on your hardware.
-          </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-            <DownloadButton size="large" />
-            <a href="#how-it-works" className="gemini-btn-secondary w-full sm:w-auto">
-              See how it works
-            </a>
-          </div>
-          <p className="mt-8 text-sm leading-relaxed text-[var(--color-gemini-text-muted)]">
-            Requires macOS and Ollama · No account required · No cloud upload of audio
-          </p>
+        </div>
+        <div className="ns-hero-media">
+          <img src={heroImage} alt="NoteStack app showing a local meeting transcript" />
         </div>
       </div>
     </section>
@@ -147,25 +139,26 @@ function HeroSection() {
 
 function PrivacyPillarsSection() {
   return (
-    <section className="border-b border-[var(--color-gemini-border)] bg-[var(--color-gemini-bg-soft)] py-16 sm:py-20">
+    <section className="border-b border-[var(--color-ns-border-strong)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="gemini-section-heading">
-            Built on <span className="gemini-gradient-text font-medium">privacy pillars</span>
-          </h2>
-          <p className="gemini-section-lead">
-            Trust isn&apos;t a checkbox—it&apos;s the architecture. Every design choice keeps your
-            voice and words local.
+        <div className="max-w-xl">
+          <p className="ns-kicker mb-4">Architecture</p>
+          <h2 className="ns-section-heading">Privacy isn&apos;t a feature toggle</h2>
+          <p className="ns-section-lead">
+            Every layer is built so your voice and words stay on the machine you already trust.
           </p>
         </div>
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-14 grid gap-px border border-[var(--color-ns-border-strong)] bg-[var(--color-ns-border-strong)] sm:grid-cols-2 lg:grid-cols-4">
           {privacyPillars.map((pillar) => (
-            <li key={pillar.title} className="gemini-card gemini-card-interactive p-6">
-              <div className="gemini-icon-badge">
-                <PillarIcon name={pillar.icon} />
+            <li key={pillar.title} className="ns-card-subtle ns-card-interactive flex flex-col p-6 sm:p-7">
+              <div className="flex items-start justify-between gap-3">
+                <span className="ns-index-label">{pillar.index}</span>
+                <div className="ns-icon-badge">
+                  <PillarIcon name={pillar.icon} />
+                </div>
               </div>
-              <h3 className="mt-4 font-medium text-[var(--color-gemini-text)]">{pillar.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
+              <h3 className="mt-6 font-semibold text-[var(--color-ns-text)]">{pillar.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-ns-text-secondary)]">
                 {pillar.description}
               </p>
             </li>
@@ -208,33 +201,33 @@ function PillarIcon({ name }: { name: string }) {
 
 function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="scroll-mt-20 border-b border-[var(--color-gemini-border)] py-16 sm:py-20">
+    <section id="how-it-works" className="scroll-mt-20 border-b border-[var(--color-ns-border-strong)] bg-[var(--color-ns-bg-elevated)] py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-start lg:gap-16">
-          <div>
-            <h2 className="gemini-section-heading">
-              How it works with <span className="gemini-gradient-text font-medium">Ollama</span>
-            </h2>
-            <p className="gemini-section-lead">
-              Ollama runs open models on your Mac. NoteStack connects to your local Ollama instance—not
-              a hosted API—so summaries stay on the same machine as your recordings.
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <p className="ns-kicker mb-4">Workflow</p>
+            <h2 className="ns-section-heading">Ollama on your LAN, not theirs</h2>
+            <p className="ns-section-lead">
+              NoteStack talks to the Ollama instance on your Mac—typically localhost—not a hosted API.
             </p>
-            <div className="gemini-card mt-8 border-[var(--color-gemini-blue-soft)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_35%,white)] p-6">
-              <h3 className="font-medium text-[var(--color-gemini-blue)]">First-time onboarding</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
-                When you open NoteStack, we detect whether Ollama is installed. If not, you get
-                step-by-step guidance: install Ollama, pull a recommended model, and verify the
-                connection—usually under five minutes on Apple Silicon or Intel Macs.
+            <div className="ns-card mt-10 border-[var(--color-ns-accent)] bg-[var(--color-ns-accent-soft)] p-6">
+              <p className="ns-kicker text-[var(--color-ns-accent)]">First launch</p>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--color-ns-text-secondary)]">
+                We detect Ollama, guide install if needed, pull a recommended model, and verify the
+                connection—usually under five minutes on Apple Silicon or Intel.
               </p>
             </div>
           </div>
-          <ol className="space-y-4">
-            {howItWorks.map((item) => (
-              <li key={item.step} className="gemini-card flex gap-4 p-5">
-                <span className="gemini-step-badge">{item.step}</span>
+          <ol className="space-y-0 border border-[var(--color-ns-border-strong)]">
+            {howItWorks.map((item, i) => (
+              <li
+                key={item.step}
+                className={`flex gap-5 border-[var(--color-ns-border-strong)] bg-[var(--color-ns-surface)] p-6 sm:p-7 ${i > 0 ? 'border-t' : ''}`}
+              >
+                <span className="ns-step-badge">{item.step}</span>
                 <div>
-                  <h3 className="font-medium text-[var(--color-gemini-text)]">{item.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--color-gemini-text-secondary)]">
+                  <h3 className="font-semibold text-[var(--color-ns-text)]">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-ns-text-secondary)]">
                     {item.body}
                   </p>
                 </div>
@@ -249,60 +242,57 @@ function HowItWorksSection() {
 
 function FeaturesComparisonSection() {
   return (
-    <section id="features" className="scroll-mt-20 bg-[var(--color-gemini-bg-soft)] py-16 sm:py-20">
+    <section id="features" className="scroll-mt-20 py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="gemini-section-heading">Local-first vs. typical cloud note tools</h2>
-          <p className="gemini-section-lead">
-            Many meeting assistants process everything in the cloud. NoteStack trades that for
-            control—without sacrificing AI-powered summaries on your own hardware.
+        <div className="max-w-xl">
+          <p className="ns-kicker mb-4">Compare</p>
+          <h2 className="ns-section-heading">Local-first vs. cloud assistants</h2>
+          <p className="ns-section-lead">
+            Cloud tools trade control for convenience. NoteStack keeps AI on your hardware instead.
           </p>
         </div>
 
         <ComparisonMobileList />
 
-        <div className="gemini-card mt-10 hidden overflow-hidden md:block">
+        <div className="mt-12 hidden overflow-hidden border border-[var(--color-ns-border-strong)] md:block">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-[var(--color-gemini-border)] bg-white">
-                <th scope="col" className="w-[34%] px-6 py-4 font-medium text-[var(--color-gemini-text-muted)]">
+              <tr className="border-b border-[var(--color-ns-border-strong)] bg-[var(--color-ns-ink)] text-[#e8e2d6]">
+                <th scope="col" className="w-[34%] px-6 py-4 font-mono text-xs font-medium uppercase tracking-wider">
                   Topic
                 </th>
-                <th
-                  scope="col"
-                  className="w-[33%] px-6 py-4 font-medium text-[var(--color-gemini-blue)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_40%,white)]"
-                >
+                <th scope="col" className="w-[33%] px-6 py-4 font-semibold">
                   NoteStack
                 </th>
-                <th scope="col" className="w-[33%] px-6 py-4 font-medium text-[var(--color-gemini-text-muted)]">
+                <th scope="col" className="w-[33%] px-6 py-4 font-medium text-[#a39e92]">
                   Typical cloud assistant
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-[var(--color-ns-surface)]">
               {comparisonRows.map((row) => (
-                <tr key={row.aspect} className="border-b border-[var(--color-gemini-border)] last:border-0">
+                <tr key={row.aspect} className="border-b border-[var(--color-ns-border)] last:border-0">
                   <th
                     scope="row"
-                    className="px-6 py-4 font-medium text-[var(--color-gemini-text-secondary)]"
+                    className="px-6 py-4 font-medium text-[var(--color-ns-text-secondary)]"
                   >
                     {row.aspect}
                   </th>
-                  <td className="px-6 py-4 text-[var(--color-gemini-text)] bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_22%,white)]">
+                  <td className="px-6 py-4 font-medium text-[var(--color-ns-text)] bg-[var(--color-ns-accent-soft)]">
                     {row.noteStack}
                   </td>
-                  <td className="px-6 py-4 text-[var(--color-gemini-text-muted)]">{row.typicalCloud}</td>
+                  <td className="px-6 py-4 text-[var(--color-ns-text-muted)]">{row.typicalCloud}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <ul className="mt-10 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-12 grid gap-3 sm:grid-cols-3">
           {quickFeatures.map((feature) => (
             <li
               key={feature}
-              className="gemini-card flex items-start gap-3 px-5 py-4 text-sm text-[var(--color-gemini-text-secondary)]"
+              className="ns-card-subtle flex items-center gap-3 px-5 py-4 text-sm text-[var(--color-ns-text-secondary)]"
             >
               <CheckIcon />
               {feature}
@@ -318,22 +308,18 @@ function ComparisonMobileList() {
   return (
     <ul className="mt-10 space-y-4 md:hidden">
       {comparisonRows.map((row) => (
-        <li key={row.aspect} className="gemini-card overflow-hidden">
-          <div className="border-b border-[var(--color-gemini-border)] bg-white px-4 py-3 text-sm font-medium text-[var(--color-gemini-text)]">
+        <li key={row.aspect} className="overflow-hidden border border-[var(--color-ns-border-strong)]">
+          <div className="border-b border-[var(--color-ns-border-strong)] bg-[var(--color-ns-ink)] px-4 py-3 text-sm font-medium text-[#e8e2d6]">
             {row.aspect}
           </div>
-          <div className="grid divide-y divide-[var(--color-gemini-border)]">
-            <div className="bg-[color-mix(in_srgb,var(--color-gemini-blue-soft)_30%,white)] px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-gemini-blue)]">
-                NoteStack
-              </p>
-              <p className="mt-1 text-sm text-[var(--color-gemini-text)]">{row.noteStack}</p>
+          <div className="grid divide-y divide-[var(--color-ns-border)]">
+            <div className="bg-[var(--color-ns-accent-soft)] px-4 py-3">
+              <p className="ns-kicker text-[var(--color-ns-accent)]">NoteStack</p>
+              <p className="mt-1 text-sm font-medium text-[var(--color-ns-text)]">{row.noteStack}</p>
             </div>
-            <div className="px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-gemini-text-muted)]">
-                Typical cloud assistant
-              </p>
-              <p className="mt-1 text-sm text-[var(--color-gemini-text-muted)]">{row.typicalCloud}</p>
+            <div className="bg-[var(--color-ns-surface)] px-4 py-3">
+              <p className="ns-kicker">Cloud</p>
+              <p className="mt-1 text-sm text-[var(--color-ns-text-muted)]">{row.typicalCloud}</p>
             </div>
           </div>
         </li>
@@ -345,11 +331,11 @@ function ComparisonMobileList() {
 function CheckIcon() {
   return (
     <svg
-      className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-gemini-blue)]"
+      className="h-4 w-4 shrink-0 text-[var(--color-ns-accent)]"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={2.5}
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
@@ -358,27 +344,19 @@ function CheckIcon() {
 
 function DownloadSection() {
   return (
-    <section id="download" className="scroll-mt-20 py-16 sm:py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div
-          className="gemini-card overflow-hidden px-6 py-12 text-center sm:px-12"
-          style={{
-            background:
-              'linear-gradient(145deg, #ffffff 0%, var(--color-gemini-bg-soft) 55%, color-mix(in srgb, var(--color-gemini-blue-soft) 35%, white) 100%)',
-          }}
-        >
-          <NoteStackMark size={40} className="mx-auto" variant="light" />
-          <h2 className="mt-5 gemini-section-heading">
-            Ready for <span className="gemini-gradient-text font-medium">private</span> meeting notes?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[var(--color-gemini-text-secondary)]">
-            Download NoteStack for Mac, set up Ollama once, and keep every transcript on your machine.
+    <section id="download" className="scroll-mt-20 border-t border-[var(--color-ns-border-strong)]">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="border border-[var(--color-ns-border-strong)] bg-[var(--color-ns-ink)] px-6 py-14 text-center text-[#e8e2d6] sm:px-12 sm:py-16">
+          <NoteStackMark size={40} className="mx-auto opacity-90" variant="dark" />
+          <h2 className="ns-display mt-6 text-3xl sm:text-4xl">Take the room offline</h2>
+          <p className="mx-auto mt-4 max-w-md text-[#c9c2b4]">
+            Download for Mac, set up Ollama once, and keep every transcript where it belongs.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex justify-center">
             <DownloadButton size="large" />
           </div>
-          <p className="mt-6 text-xs text-[var(--color-gemini-text-muted)]">
-            Requires macOS 13+ and Ollama · Universal build for Apple Silicon and Intel
+          <p className="mt-6 font-mono text-[0.65rem] uppercase tracking-wider text-[#8a8478]">
+            Universal · Apple Silicon & Intel
           </p>
         </div>
       </div>

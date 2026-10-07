@@ -21,7 +21,7 @@ export function DownloadButton({ className = '', size = 'default' }: DownloadBut
         download
         role="button"
         aria-label="Download NoteStack for Mac"
-        className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gemini-blue)] ${sizeClasses} ${className}`}
+        className={`ns-btn-primary ${sizeClasses} ${className}`}
       >
         <AppleIcon />
         Download for Mac
@@ -37,11 +37,11 @@ export function DownloadButton({ className = '', size = 'default' }: DownloadBut
       aria-busy={loading}
       title={loading ? 'Checking for release…' : 'macOS .dmg download coming soon'}
       onClick={(e) => e.preventDefault()}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-gemini-blue)] font-medium text-white shadow-sm transition hover:bg-[var(--color-gemini-blue-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gemini-blue)] ${sizeClasses} ${className} ${loading ? 'opacity-80' : ''}`}
+      className={`ns-btn-primary ${sizeClasses} ${className} ${loading ? 'opacity-80' : ''}`}
     >
       <AppleIcon />
       Download for Mac
-      <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-xs font-semibold tracking-wide">
+      <span className="border border-[#faf8f3]/40 px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-wide">
         {loading ? '…' : 'Soon'}
       </span>
     </a>
