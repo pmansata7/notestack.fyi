@@ -19,7 +19,8 @@ import { TranscriptList } from "./components/TranscriptList";
 import { NoteStackLogo } from "./components/NoteStackLogo";
 import { NoteStackMark } from "./components/NoteStackMark";
 import { useDictation } from "./hooks/useDictation";
-import { useMeetingReminders } from "./hooks/useMeetingReminders";
+import { useMeetingAlerts } from "./hooks/useMeetingAlerts";
+import { MeetingPrompt } from "./components/MeetingPrompt";
 import { useRecording } from "./hooks/useRecording";
 import { normalizeSettings } from "./lib/settings";
 import type { AppSettings, Transcript } from "./types";
@@ -47,7 +48,6 @@ function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [peekId, setPeekId] = useState<string | null>(null);
-  const [reminder, setReminder] = useState<string | null>(null);
   const [paneHidden, setPaneHidden] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -76,9 +76,11 @@ function App() {
     auto_instant_summary: true,
     delete_audio_after_transcribe: false,
     floating_pane_visible: true,
-    meeting_reminder_minutes: 1,
+    meeting_reminder_minutes: 5,
     default_template_id: "general",
     calendar_events_json: "[]",
+    google_oauth_client_id: "",
+    meeting_popup_enabled: true,
     dictation_enabled: false,
     transcription_model: "gemma4:e4b",
     auto_transcribe_on_stop: true,
@@ -88,8 +90,8 @@ function App() {
 
   useDictation(effectiveSettings.dictation_enabled);
 
-  useMeetingReminders(effectiveSettings, (title) => {
-    setReminder(`Starting soon: ${title}`);
+  const meetingAlerts = useMeetingAlerts(effectiveSettings, {
+    recording: recording.recording,
   });
 
   useEffect(() => {
@@ -186,15 +188,6 @@ function App() {
           ))}
         </nav>
       </header>
-
-      {reminder && (
-        <div className="reminder-banner">
-          {reminder}
-          <button type="button" className="ghost small" onClick={() => setReminder(null)}>
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {view === "settings" ? (
         <main className="page-shell">
@@ -313,6 +306,25 @@ function App() {
             />
           </section>
         </main>
+      )}
+
+      {meetingAlerts.alert && !recording.recording && (
+        <MeetingPrompt
+          alert={meetingAlerts.alert}
+          onDismiss={() => meetingAlerts.dismiss(meetingAlerts.alert!.id)}
+          onTakeNotes={() => {
+            const title =
+              meetingAlerts.alert!.reason === "detected"
+                ? meetingAlerts.alert!.title
+                : meetingAlerts.alert!.title;
+            meetingAlerts.dismiss(meetingAlerts.alert!.id);
+            setView("main");
+            setPaneHidden(false);
+            void recording.start(title).then((id) => {
+              if (id) setSelectedId(id);
+            });
+          }}
+        />
       )}
 
       <FloatingPane

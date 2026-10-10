@@ -901,6 +901,60 @@ button.small {
   color: var(--gemini-success-text);
 }
 
+.meeting-prompt {
+  position: fixed;
+  left: 50%;
+  bottom: 1.35rem;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: min(440px, calc(100vw - 2rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+  background: var(--panel);
+  border: 1px solid var(--gemini-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+}
+
+.meeting-prompt-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.meeting-prompt-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.meeting-prompt-meta {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.meeting-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+button.small-prompt {
+  font-size: 0.82rem;
+  padding: 0.45rem 0.85rem;
+}
+
+.calendar-connect-row {
+  margin-bottom: 0.65rem;
+  align-items: center;
+}
+
 .search-box {
   display: block;
   margin-bottom: 0.25rem;

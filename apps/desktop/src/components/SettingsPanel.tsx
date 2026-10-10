@@ -203,6 +203,30 @@ export function SettingsPanel({
           ))}
         </select>
       </label>
+      <h3>Google Calendar</h3>
+      <label>
+        Google OAuth client ID
+        <input
+          value={draft.google_oauth_client_id}
+          onChange={(e) =>
+            setDraft({ ...draft, google_oauth_client_id: e.target.value })
+          }
+          placeholder="123456789.apps.googleusercontent.com"
+        />
+      </label>
+      <p className="muted small">
+        Create a Google Cloud OAuth client (Desktop). Authorized redirect URI:{" "}
+        <code>http://127.0.0.1:14528/oauth2/callback</code>. You can also set{" "}
+        <code>NOTESTACK_GOOGLE_CLIENT_ID</code> in the environment.
+      </p>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={draft.meeting_popup_enabled}
+          onChange={() => toggle("meeting_popup_enabled")}
+        />
+        Show meeting prompt when a call starts or Zoom / Teams / Meet is detected
+      </label>
       <label>
         Calendar reminder (minutes before)
         <input

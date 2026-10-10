@@ -1,11 +1,16 @@
 use crate::db::{now_iso, Database, Transcript};
+use crate::google_calendar::{
+    self, GoogleCalendarStatus,
+};
 use crate::ollama::{install_ollama, is_ollama_installed, OllamaClient, OllamaInstallStatus};
 use crate::state::{write_data_dir_override, AppSettings, AppState};
+use crate::system::ForegroundMeeting;
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::State;
+use tauri_plugin_opener::OpenerExt;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize)]
@@ -703,4 +708,63 @@ pub fn strip_audio_after_transcribe(
         state.db.update_transcript(&t).map_err(map_err)?;
     }
     Ok(t)
+}
+
+#[tauri::command]
+pub fn google_calendar_status(
+    state: State<Mutex<AppState>>,
+) -> Result<GoogleCalendarStatus, CommandError> {
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let settings = AppSettings::load(&state.db);
+    google_calendar::status(&state.db, &settings.google_oauth_client_id).map_err(map_err)
+}
+
+#[tauri::command]
+pub fn google_calendar_connect(
+    app: tauri::AppHandle,
+    state: State<Mutex<AppState>>,
+) -> Result<GoogleCalendarStatus, CommandError> {
+    let client_id = {
+        let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+        AppSettings::load(&state.db).google_oauth_client_id
+    };
+    let token_res = google_calendar::run_oauth_flow(&client_id, &|url| {
+        app.opener()
+            .open_url(url, None::<&str>)
+            .map_err(|e| e.to_string())
+    })
+    .map_err(map_err)?;
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    google_calendar::finalize_connection(&state.db, &client_id, &token_res).map_err(map_err)
+}
+
+#[tauri::command]
+pub fn google_calendar_disconnect(
+    state: State<Mutex<AppState>>,
+) -> Result<GoogleCalendarStatus, CommandError> {
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let settings = AppSettings::load(&state.db);
+    google_calendar::disconnect(&state.db).map_err(map_err)?;
+    google_calendar::status(&state.db, &settings.google_oauth_client_id).map_err(map_err)
+}
+
+#[tauri::command]
+pub fn google_calendar_sync(
+    state: State<Mutex<AppState>>,
+) -> Result<AppSettings, CommandError> {
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let settings = AppSettings::load(&state.db);
+    let events = google_calendar::sync_events(&state.db, &settings.google_oauth_client_id)
+        .map_err(map_err)?;
+    let merged = google_calendar::merge_google_events(&settings.calendar_events_json, &events)
+        .map_err(map_err)?;
+    let mut next = settings;
+    next.calendar_events_json = merged;
+    next.save(&state.db).map_err(map_err)?;
+    Ok(next)
+}
+
+#[tauri::command]
+pub fn detect_foreground_meeting() -> Option<ForegroundMeeting> {
+    crate::system::detect_foreground_meeting()
 }

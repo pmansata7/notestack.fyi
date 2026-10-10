@@ -23,6 +23,8 @@ export function normalizeSettings(raw: AppSettings): AppSettings {
         ? DEFAULT_SPEECH_MODEL
         : raw.transcription_model,
     auto_transcribe_on_stop: raw.auto_transcribe_on_stop ?? true,
+    google_oauth_client_id: raw.google_oauth_client_id ?? "",
+    meeting_popup_enabled: raw.meeting_popup_enabled ?? true,
   };
 }
 

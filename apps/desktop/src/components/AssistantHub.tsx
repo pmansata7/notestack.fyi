@@ -3,6 +3,8 @@ import {
   generateDailyDigest,
   generateMeetingPrep,
 } from "../api";
+import { useGoogleCalendar } from "../hooks/useGoogleCalendar";
+import { conferenceLabel } from "../lib/conference";
 import { parseCalendarEvents } from "../lib/settings";
 import type { AppSettings, Transcript } from "../types";
 
@@ -24,6 +26,8 @@ export function AssistantHub({
   const [busy, setBusy] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventWhen, setNewEventWhen] = useState("");
+
+  const calendar = useGoogleCalendar(settings, onSaveSettings);
 
   const events = useMemo(
     () => parseCalendarEvents(settings.calendar_events_json),
@@ -51,6 +55,7 @@ export function AssistantHub({
         starts_at: new Date(newEventWhen).toISOString(),
         duration_minutes: 30,
         attendees: "",
+        source: "local",
       },
     ];
     onSaveSettings({
@@ -90,8 +95,52 @@ export function AssistantHub({
       <section className="hub-card">
         <h3>Upcoming & calendar</h3>
         <p className="muted small">
-          Sync-style reminders (local). Add events until full calendar OAuth ships.
+          Connect Google Calendar to sync meetings and get Granola-style prompts
+          for Zoom, Teams, and Meet.
         </p>
+        <div className="row tight calendar-connect-row">
+          {calendar.status?.connected ? (
+            <>
+              <span className="muted small">
+                {calendar.status.email ?? "Google Calendar"} ·{" "}
+                {calendar.status.last_sync_at
+                  ? `Synced ${new Date(calendar.status.last_sync_at).toLocaleString()}`
+                  : "Not synced yet"}
+              </span>
+              <button
+                type="button"
+                className="secondary small"
+                disabled={calendar.busy}
+                onClick={() => void calendar.syncNow()}
+              >
+                Sync
+              </button>
+              <button
+                type="button"
+                className="ghost small"
+                disabled={calendar.busy}
+                onClick={() => void calendar.disconnect()}
+              >
+                Disconnect
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="secondary small"
+              disabled={calendar.busy || !calendar.status?.client_id_configured}
+              onClick={() => void calendar.connect()}
+            >
+              Connect Google Calendar
+            </button>
+          )}
+        </div>
+        {!calendar.status?.client_id_configured && (
+          <p className="muted small">
+            Add your Google OAuth client ID in Settings first (desktop app type).
+          </p>
+        )}
+        {calendar.error && <p className="error small">{calendar.error}</p>}
         <ul className="event-list">
           {upcoming.length === 0 && (
             <li className="muted">No upcoming events — add one below.</li>
@@ -102,6 +151,9 @@ export function AssistantHub({
                 <strong>{e.title}</strong>
                 <span className="meta">
                   {new Date(e.starts_at).toLocaleString()} · {e.duration_minutes}m
+                  {e.conference_type
+                    ? ` · ${conferenceLabel(e.conference_type)}`
+                    : ""}
                 </span>
               </div>
               <div className="row tight">

@@ -10,7 +10,7 @@ Desktop parity with **Fireflies** and **Granola** (local-first) — see [docs/de
 - **Enhance notes** — Granola-style merge of your bullets + transcript (Ollama)
 - **Instant summary**, full AI notes, **tasks**, **daily digest**, **meeting briefs**
 - **Ask across meetings** — chat over local history
-- **Search**, **trash/restore**, meeting **templates**, calendar reminders (local events)
+- **Search**, **trash/restore**, meeting **templates**, **Google Calendar** sync + meeting prompts
 - **Dictation** (Fireflies Talk–style) — hold Fn / Ctrl+Win, copies to clipboard
 - SQLite + audio under `~/Library/Application Support/NoteStack/`
 - **Ollama onboarding wizard** and all AI via `localhost` Ollama

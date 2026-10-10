@@ -25,6 +25,10 @@ chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
 base64 = "0.22"
 sysinfo = "0.33"
+tiny_http = "0.12"
+rand = "0.8"
+sha2 = "0.10"
+urlencoding = "2"
 
 [profile.release]
 codegen-units = 1
