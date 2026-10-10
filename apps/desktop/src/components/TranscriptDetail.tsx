@@ -6,7 +6,9 @@ import {
   transcribeRecordingAudio,
   updateTranscript,
 } from "../api";
+import { FormattedTranscript } from "./FormattedTranscript";
 import { NoteStackMark } from "./NoteStackMark";
+import { hasSpeakerLabels } from "../lib/transcriptText";
 import {
   MEETING_TEMPLATES,
   type AppSettings,
@@ -89,11 +91,15 @@ export function TranscriptDetail({
     return (
       <div className="detail empty">
         <NoteStackMark size={48} variant="light" />
-        <h2 className="gemini-greeting">Hello</h2>
-        <p>Select a recording from the sidebar or start a new one to capture meeting notes locally.</p>
+        <h2 className="gemini-greeting">Your notepad</h2>
+        <p>Start a meeting note and type while you listen — transcript and AI enhancements stay on your Mac.</p>
       </div>
     );
   }
+
+  const isLive = Boolean(activeRecording);
+  const showFormattedTranscript =
+    isLive || hasSpeakerLabels(text) || text.includes("\n");
 
   const tasks = parseTasks(transcript.tasks_json);
 
@@ -196,7 +202,7 @@ export function TranscriptDetail({
   };
 
   return (
-    <div className="detail">
+    <div className={`detail${isLive ? " detail--live" : ""}`}>
       {peek && peek.id !== transcript.id && (
         <aside className="peek-panel">
           <header>
@@ -209,73 +215,89 @@ export function TranscriptDetail({
         </aside>
       )}
 
-      <label>
-        Template
-        <select
-          value={templateId}
-          onChange={(e) => setTemplateId(e.target.value)}
-        >
-          {MEETING_TEMPLATES.map((t) => (
-            <option key={t.id} value={t.id}>{t.label}</option>
-          ))}
-        </select>
+      {!isLive && (
+        <label className="field-compact">
+          Template
+          <select
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value)}
+          >
+            {MEETING_TEMPLATES.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      <label className="field-title">
+        {isLive ? "Meeting" : "Title"}
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={isLive ? "Untitled meeting" : "Title"}
+        />
       </label>
 
-      <label>
-        Title
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
-      </label>
-
-      {instant && (
+      {instant && !isLive && (
         <section className="instant-summary">
-          <h3>Instant summary</h3>
+          <h3>Summary</h3>
           <pre>{instant}</pre>
         </section>
       )}
 
-      <label>
-        Your notes during the meeting
-        <textarea
-          rows={6}
-          className="manual-notes"
-          value={manual}
-          onChange={(e) => {
-            setManual(e.target.value);
-            activeRecording?.onManualNotesChange(e.target.value);
-          }}
-          placeholder="Rough bullets — enhance after the call."
-        />
-      </label>
-
-      {aiAdditions && (
+      <section className="notes-primary">
         <label>
-          AI enhancements
+          {isLive ? "Your notes" : "Notes"}
           <textarea
-            rows={8}
+            rows={isLive ? 14 : 8}
+            className="manual-notes notes-editor"
+            value={manual}
+            onChange={(e) => {
+              setManual(e.target.value);
+              activeRecording?.onManualNotesChange(e.target.value);
+            }}
+            placeholder="Type what matters — bullets, decisions, names."
+            autoFocus={isLive}
+          />
+        </label>
+      </section>
+
+      {aiAdditions && !isLive && (
+        <label>
+          AI additions
+          <textarea
+            rows={6}
             className="ai-notes"
             value={aiAdditions}
             onChange={(e) => setAiAdditions(e.target.value)}
-            readOnly={false}
           />
         </label>
       )}
 
-      <label>
-        Transcript
-        <textarea
-          rows={10}
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            activeRecording?.onLiveTextChange(e.target.value);
-          }}
-          placeholder={
-            activeRecording
-              ? "Recording… live transcript fills in here via Ollama on the desktop app (or browser speech when available)."
-              : "Live speech-to-text appears here when supported, or use Transcribe from audio after recording."
-          }
-        />
-      </label>
+      <section className="transcript-section">
+        <div className="transcript-section-header">
+          <h3>Transcript</h3>
+          {isLive && (
+            <span className="muted small">Speakers labeled when you end the meeting</span>
+          )}
+        </div>
+        {showFormattedTranscript && (
+          <div className="transcript-readout">
+            <FormattedTranscript text={text} compact={isLive} />
+          </div>
+        )}
+        {!isLive && (
+          <label className="field-compact">
+            Edit transcript
+            <textarea
+              rows={6}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Transcribe from audio or paste text."
+            />
+          </label>
+        )}
+      </section>
 
       {tasks.length > 0 && (
         <section className="inline-tasks">
@@ -288,6 +310,7 @@ export function TranscriptDetail({
         </section>
       )}
 
+      {!isLive && (
       <div className="row">
         {transcript.audio_path && !text.trim() && !activeRecording && (
           <button
@@ -313,7 +336,9 @@ export function TranscriptDetail({
           Share (copy MD)
         </button>
       </div>
+      )}
 
+      {isLive && (
       <div className="row">
         <label className="inline">
           Glance at another note while recording
@@ -330,8 +355,9 @@ export function TranscriptDetail({
           </select>
         </label>
       </div>
+      )}
 
-      {transcript.audio_path && (
+      {transcript.audio_path && !isLive && (
         <p className="muted mono">Audio: {transcript.audio_path}</p>
       )}
       {message && <p className="status">{message}</p>}

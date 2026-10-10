@@ -39,5 +39,5 @@ NoteStack implements local-first equivalents of major desktop capabilities from 
 - True system-audio / ScreenCaptureKit capture (macOS) and Windows loopback
 - Calendar OAuth (Google / Microsoft)
 - Global always-on-top Tauri window (current pane is in-app overlay)
-- Speaker diarization, pace coaching, Sales Assist KB
+- True acoustic speaker diarization (NoteStack labels turns via local LLM after transcribe), pace coaching, Sales Assist KB
 - Mobile / watch companions

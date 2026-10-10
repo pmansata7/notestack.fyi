@@ -33,6 +33,8 @@ pub struct AppSettings {
     /// Ollama model for speech-to-text (e.g. gemma4:e4b). Empty uses DEFAULT_TRANSCRIPTION_MODEL.
     pub transcription_model: String,
     pub auto_transcribe_on_stop: bool,
+    /// Label speaker turns after final transcription (LLM formatting).
+    pub identify_speakers: bool,
 }
 
 impl Default for AppSettings {
@@ -44,13 +46,14 @@ impl Default for AppSettings {
             auto_enhance_on_stop: true,
             auto_instant_summary: true,
             delete_audio_after_transcribe: false,
-            floating_pane_visible: true,
+            floating_pane_visible: false,
             meeting_reminder_minutes: 1,
             default_template_id: "general".to_string(),
             calendar_events_json: "[]".to_string(),
             dictation_enabled: false,
             transcription_model: crate::ollama::DEFAULT_TRANSCRIPTION_MODEL.to_string(),
             auto_transcribe_on_stop: true,
+            identify_speakers: true,
         }
     }
 }
@@ -69,6 +72,7 @@ impl AppSettings {
     pub const DICTATION_KEY: &'static str = "dictation_enabled";
     pub const TRANSCRIPTION_MODEL_KEY: &'static str = "transcription_model";
     pub const AUTO_TRANSCRIBE_KEY: &'static str = "auto_transcribe_on_stop";
+    pub const IDENTIFY_SPEAKERS_KEY: &'static str = "identify_speakers";
 
     pub fn load(db: &Database) -> Self {
         let mut s = AppSettings::default();
@@ -120,6 +124,9 @@ impl AppSettings {
         }
         if let Ok(Some(v)) = db.get_setting(Self::AUTO_TRANSCRIBE_KEY) {
             s.auto_transcribe_on_stop = v == "true";
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::IDENTIFY_SPEAKERS_KEY) {
+            s.identify_speakers = v == "true";
         }
         s
     }
@@ -182,6 +189,14 @@ impl AppSettings {
         db.set_setting(
             Self::AUTO_TRANSCRIBE_KEY,
             if self.auto_transcribe_on_stop {
+                "true"
+            } else {
+                "false"
+            },
+        )?;
+        db.set_setting(
+            Self::IDENTIFY_SPEAKERS_KEY,
+            if self.identify_speakers {
                 "true"
             } else {
                 "false"
