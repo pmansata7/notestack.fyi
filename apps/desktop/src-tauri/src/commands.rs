@@ -669,15 +669,31 @@ pub fn transcribe_recording_audio(
         .ok_or_else(|| command_err("no audio saved for this recording"))?;
 
     let client = OllamaClient::new(Some(settings.ollama_base_url));
-    let text = client
+    let mut text = client
         .transcribe_audio_file(&model, std::path::Path::new(path))
         .map_err(map_err)?;
 
+    if settings.identify_speakers && !text.trim().is_empty() {
+        let label_model = if settings.default_model.trim().is_empty() {
+            "llama3.2".to_string()
+        } else {
+            settings.default_model.clone()
+        };
+        if let Ok(labeled) = client.label_speakers(&label_model, &text) {
+            if !labeled.trim().is_empty() {
+                text = labeled;
+            }
+        }
+    }
+
     if !text.trim().is_empty() {
-        if t.transcript_text.trim().is_empty() {
+        let existing = t.transcript_text.trim();
+        if existing.is_empty() {
+            t.transcript_text = text;
+        } else if !existing.to_lowercase().contains("speaker 1:") {
             t.transcript_text = text;
         } else {
-            t.transcript_text = format!("{}\n{}", t.transcript_text.trim(), text.trim());
+            t.transcript_text = format!("{}\n{}", existing, text.trim());
         }
     }
     t.updated_at = now_iso();

@@ -43,6 +43,7 @@ export interface AppSettings {
   dictation_enabled: boolean;
   transcription_model: string;
   auto_transcribe_on_stop: boolean;
+  identify_speakers: boolean;
 }
 
 export interface OllamaModel {

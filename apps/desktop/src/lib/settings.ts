@@ -12,7 +12,7 @@ export function normalizeSettings(raw: AppSettings): AppSettings {
     auto_enhance_on_stop: raw.auto_enhance_on_stop ?? true,
     auto_instant_summary: raw.auto_instant_summary ?? true,
     delete_audio_after_transcribe: raw.delete_audio_after_transcribe ?? false,
-    floating_pane_visible: raw.floating_pane_visible ?? true,
+    floating_pane_visible: raw.floating_pane_visible ?? false,
     meeting_reminder_minutes: raw.meeting_reminder_minutes ?? 1,
     default_template_id: raw.default_template_id || "general",
     calendar_events_json: raw.calendar_events_json || "[]",
@@ -23,6 +23,7 @@ export function normalizeSettings(raw: AppSettings): AppSettings {
         ? DEFAULT_SPEECH_MODEL
         : raw.transcription_model,
     auto_transcribe_on_stop: raw.auto_transcribe_on_stop ?? true,
+    identify_speakers: raw.identify_speakers ?? true,
   };
 }
 

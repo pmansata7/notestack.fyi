@@ -82,6 +82,7 @@ function App() {
     dictation_enabled: false,
     transcription_model: "gemma4:e4b",
     auto_transcribe_on_stop: true,
+    identify_speakers: true,
   });
 
   const recording = useRecording(effectiveSettings, onSaved);
@@ -164,14 +165,12 @@ function App() {
             <span className="recording-pill">Recording {formatElapsed(recording.elapsedMs)}</span>
           )}
         </div>
-        <nav>
+        <nav className="topnav">
           {(
             [
-              ["main", "Recordings"],
-              ["assistant", "Assistant"],
-              ["ask", "Ask"],
+              ["main", "Notes"],
               ["tasks", "Tasks"],
-              ["trash", "Trash"],
+              ["assistant", "Calendar"],
               ["settings", "Settings"],
             ] as const
           ).map(([id, label]) => (
@@ -233,7 +232,6 @@ function App() {
       ) : (
         <main className="layout">
           <aside className="sidebar">
-            <p className="sidebar-section-label">Recent</p>
             <div className="record-bar">
               {!recording.recording ? (
                 <button
@@ -246,7 +244,7 @@ function App() {
                     });
                   }}
                 >
-                  Take notes (no bot)
+                  New meeting note
                 </button>
               ) : (
                 <button
@@ -254,28 +252,17 @@ function App() {
                   className="record-btn stop"
                   onClick={() => void recording.stop()}
                 >
-                  Stop · {formatElapsed(recording.elapsedMs)}
+                  End · {formatElapsed(recording.elapsedMs)}
                 </button>
               )}
             </div>
-            {recording.transcribing && (
-              <p className="status">Transcribing with Ollama…</p>
+            {(recording.postProcessing || recording.transcribing) && (
+              <p className="status status--inline">
+                Finishing transcript… you can keep editing your notes.
+              </p>
             )}
             {recording.error && (
               <p className="error">{recording.error}</p>
-            )}
-            {recording.recording && recording.liveSttMode === "ollama" && (
-              <p className="muted small">
-                {recording.liveOllamaBusy
-                  ? "Updating live transcript with Ollama…"
-                  : "Live transcript via Ollama (every ~10s). Needs a speech model — ollama pull gemma4:e4b."}
-              </p>
-            )}
-            {recording.recording && recording.liveSttMode === "none" && (
-              <p className="muted small">
-                Recording audio. Enable &quot;Transcribe audio with Ollama when
-                recording stops&quot; in Settings for live + final transcripts.
-              </p>
             )}
             <TranscriptList
               items={transcripts}
@@ -285,6 +272,22 @@ function App() {
               search={search}
               onSearchChange={setSearch}
             />
+            <footer className="sidebar-footer">
+              <button
+                type="button"
+                className="linkish"
+                onClick={() => setView("ask")}
+              >
+                Ask across meetings
+              </button>
+              <button
+                type="button"
+                className="linkish"
+                onClick={() => setView("trash")}
+              >
+                Trash
+              </button>
+            </footer>
           </aside>
           <section className="content">
             <TranscriptDetail
