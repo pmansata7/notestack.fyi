@@ -2,6 +2,97 @@ use serde::Serialize;
 use sysinfo::{Disks, System};
 
 #[derive(Debug, Clone, Serialize)]
+pub struct ForegroundMeeting {
+    pub kind: String,
+    pub label: String,
+}
+
+fn classify_meeting_text(text: &str) -> Option<(String, String)> {
+    let lower = text.to_lowercase();
+    if lower.contains("zoom") || lower.contains("zoom.us") {
+        return Some(("zoom".to_string(), "Zoom".to_string()));
+    }
+    if lower.contains("microsoft teams") || lower.contains("teams.microsoft") || lower == "teams" {
+        return Some(("teams".to_string(), "Microsoft Teams".to_string()));
+    }
+    if lower.contains("google meet") || lower.contains("meet.google") {
+        return Some(("meet".to_string(), "Google Meet".to_string()));
+    }
+    if lower.contains("webex") {
+        return Some(("webex".to_string(), "Webex".to_string()));
+    }
+    None
+}
+
+fn run_command_output(args: &[&str]) -> Option<String> {
+    let out = std::process::Command::new(args[0])
+        .args(&args[1..])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    if text.is_empty() {
+        None
+    } else {
+        Some(text)
+    }
+}
+
+/// Best-effort detection of Zoom / Teams / Meet from the foreground app or window title.
+pub fn detect_foreground_meeting() -> Option<ForegroundMeeting> {
+    #[cfg(target_os = "macos")]
+    {
+        let app = run_command_output(&[
+            "osascript",
+            "-e",
+            "tell application \"System Events\" to get name of first application process whose frontmost is true",
+        ]);
+        let window = run_command_output(&[
+            "osascript",
+            "-e",
+            "tell application \"System Events\" to tell (first application process whose frontmost is true) to get name of front window",
+        ]);
+        for text in [window, app].into_iter().flatten() {
+            if let Some((kind, label)) = classify_meeting_text(&text) {
+                return Some(ForegroundMeeting { kind, label });
+            }
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Some(title) = run_command_output(&["xdotool", "getactivewindow", "getwindowname"]) {
+            if let Some((kind, label)) = classify_meeting_text(&title) {
+                return Some(ForegroundMeeting { kind, label });
+            }
+        }
+        if let Some(class) = run_command_output(&["xdotool", "getactivewindow", "getwindowclassname"]) {
+            if let Some((kind, label)) = classify_meeting_text(&class) {
+                return Some(ForegroundMeeting { kind, label });
+            }
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(title) = run_command_output(&[
+            "powershell",
+            "-NoProfile",
+            "-Command",
+            "(Get-Process | Where-Object {$_.MainWindowHandle -ne 0} | Sort-Object -Property @{Expression={$_.MainWindowTitle.Length}; Descending=$true} | Select-Object -First 1).MainWindowTitle",
+        ]) {
+            if let Some((kind, label)) = classify_meeting_text(&title) {
+                return Some(ForegroundMeeting { kind, label });
+            }
+        }
+    }
+
+    None
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct HardwareHints {
     /// Free space on the volume that holds the user home directory (where Ollama stores models).
     pub available_disk_bytes: u64,

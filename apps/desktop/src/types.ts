@@ -21,12 +21,17 @@ export interface MeetingTask {
   done: boolean;
 }
 
+export type ConferenceType = "zoom" | "teams" | "meet" | "webex" | "other";
+
 export interface CalendarEvent {
   id: string;
   title: string;
   starts_at: string;
   duration_minutes: number;
   attendees: string;
+  meeting_url?: string | null;
+  conference_type?: ConferenceType | string | null;
+  source?: "google" | "local" | string;
 }
 
 export interface AppSettings {
@@ -43,6 +48,28 @@ export interface AppSettings {
   dictation_enabled: boolean;
   transcription_model: string;
   auto_transcribe_on_stop: boolean;
+  google_oauth_client_id: string;
+  meeting_popup_enabled: boolean;
+}
+
+export interface GoogleCalendarStatus {
+  connected: boolean;
+  email: string | null;
+  last_sync_at: string | null;
+  client_id_configured: boolean;
+}
+
+export interface ForegroundMeeting {
+  kind: ConferenceType | string;
+  label: string;
+}
+
+export interface MeetingAlert {
+  id: string;
+  title: string;
+  reason: "upcoming" | "started" | "detected";
+  conference_type?: ConferenceType | string | null;
+  meeting_url?: string | null;
 }
 
 export interface OllamaModel {

@@ -15,7 +15,7 @@ NoteStack implements local-first equivalents of major desktop capabilities from 
 | Tasks | Extracted on **Enhance notes**; **Tasks** view |
 | Daily Digest | **Assistant → Daily digest** |
 | Meeting Prep | **Assistant → Brief** per calendar event |
-| Calendar + reminders | Local calendar events + reminder banner |
+| Calendar + reminders | Google Calendar OAuth sync + meeting prompt (Zoom / Teams / Meet) |
 | Fireflies Talk dictation | **Settings → Dictation** (clipboard on release) |
 | Trash / restore | **Trash** view |
 | Search meetings | Sidebar search |
@@ -37,7 +37,7 @@ NoteStack implements local-first equivalents of major desktop capabilities from 
 ## Not yet implemented
 
 - True system-audio / ScreenCaptureKit capture (macOS) and Windows loopback
-- Calendar OAuth (Google / Microsoft)
+- Microsoft Calendar OAuth
 - Global always-on-top Tauri window (current pane is in-app overlay)
 - Speaker diarization, pace coaching, Sales Assist KB
 - Mobile / watch companions
