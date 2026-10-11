@@ -1,0 +1,64 @@
+# Copy to your app repo as .github/workflows/pr-risk-review.yml
+# See docs/GITHUB-ACTIONS.md
+
+name: PR risk review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-risk-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: pmansata7/code-review-bot
+          ref: master
+          path: code-review-bot
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: code-review-bot/package-lock.json
+
+      - run: npm ci
+        working-directory: code-review-bot
+
+      - name: Start BDK server
+        working-directory: code-review-bot
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          npx @cursor/bdk serve --dir . --mode single --dev --port 3000 &
+          echo $! > "$RUNNER_TEMP/bdk-serve.pid"
+          for i in $(seq 1 45); do
+            curl -sf http://127.0.0.1:3000/v1/info >/dev/null && exit 0
+            sleep 2
+          done
+          exit 1
+
+      - name: Run PR review
+        working-directory: code-review-bot
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="${{ github.repository }}"
+          PR="${{ github.event.pull_request.number }}"
+          ACTION="${{ github.event.action }}"
+          npx @cursor/bdk github replay "${REPO}#${PR}" \
+            --dir . \
+            --url http://127.0.0.1:3000 \
+            --events pull_request \
+            --action "$ACTION"
+          kill "$(cat "$RUNNER_TEMP/bdk-serve.pid")" 2>/dev/null || true
