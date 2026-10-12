@@ -42,6 +42,8 @@ pub struct AppSettings {
     /// OAuth 2.0 client ID for Google Calendar (desktop app).
     pub google_oauth_client_id: String,
     pub meeting_popup_enabled: bool,
+    /// Label speaker turns after final transcription (LLM formatting).
+    pub identify_speakers: bool,
 }
 
 impl Default for AppSettings {
@@ -53,7 +55,7 @@ impl Default for AppSettings {
             auto_enhance_on_stop: true,
             auto_instant_summary: true,
             delete_audio_after_transcribe: false,
-            floating_pane_visible: true,
+            floating_pane_visible: false,
             meeting_reminder_minutes: 1,
             default_template_id: "general".to_string(),
             calendar_events_json: "[]".to_string(),
@@ -62,6 +64,7 @@ impl Default for AppSettings {
             auto_transcribe_on_stop: true,
             google_oauth_client_id: String::new(),
             meeting_popup_enabled: true,
+            identify_speakers: true,
         }
     }
 }
@@ -82,6 +85,7 @@ impl AppSettings {
     pub const AUTO_TRANSCRIBE_KEY: &'static str = "auto_transcribe_on_stop";
     pub const GOOGLE_CLIENT_ID_KEY: &'static str = "google_oauth_client_id";
     pub const MEETING_POPUP_KEY: &'static str = "meeting_popup_enabled";
+    pub const IDENTIFY_SPEAKERS_KEY: &'static str = "identify_speakers";
 
     pub fn load(db: &Database) -> Self {
         let mut s = AppSettings::default();
@@ -139,6 +143,9 @@ impl AppSettings {
         }
         if let Ok(Some(v)) = db.get_setting(Self::MEETING_POPUP_KEY) {
             s.meeting_popup_enabled = v != "false";
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::IDENTIFY_SPEAKERS_KEY) {
+            s.identify_speakers = v == "true";
         }
         s
     }
@@ -210,6 +217,14 @@ impl AppSettings {
         db.set_setting(
             Self::MEETING_POPUP_KEY,
             if self.meeting_popup_enabled {
+                "true"
+            } else {
+                "false"
+            },
+        )?;
+        db.set_setting(
+            Self::IDENTIFY_SPEAKERS_KEY,
+            if self.identify_speakers {
                 "true"
             } else {
                 "false"

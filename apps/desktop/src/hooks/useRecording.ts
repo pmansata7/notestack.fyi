@@ -11,7 +11,14 @@ import {
 } from "../api";
 import { isTauriDesktop } from "../lib/platform";
 import {
+  isJunkTranscriptionLine,
+  hasSpeakerLabels,
+  isUsableLiveTranscript,
+  stripJunkTranscript,
+} from "../lib/transcriptText";
+import {
   createWavCapture,
+  MIN_LIVE_RMS,
   MIN_LIVE_WAV_BYTES,
   type WavCaptureHandle,
 } from "../lib/wavCapture";
@@ -39,6 +46,7 @@ function getSpeechRecognition(): SpeechRecognitionCtor | null {
 }
 
 const LIVE_OLLAMA_INTERVAL_MS = 10_000;
+const LIVE_OLLAMA_STOP_WAIT_MS = 8_000;
 
 export type LiveSttMode = "web" | "ollama" | "none";
 
@@ -47,6 +55,7 @@ export function useRecording(
   onSaved: (t: Transcript) => void,
 ) {
   const [recording, setRecording] = useState(false);
+  const [postProcessing, setPostProcessing] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [liveText, setLiveText] = useState("");
   const [manualNotes, setManualNotes] = useState("");
@@ -99,22 +108,30 @@ export function useRecording(
 
   const appendLiveTranscript = (piece: string) => {
     const trimmed = piece.trim();
-    if (!trimmed) return;
+    if (!trimmed || isJunkTranscriptionLine(trimmed)) return;
     setLiveText((prev) => {
-      const next = prev.trim() ? `${prev.trim()}\n${trimmed}` : trimmed;
+      const base = stripJunkTranscript(prev);
+      const next = base.trim() ? `${base.trim()}\n${trimmed}` : trimmed;
       liveTextRef.current = next;
       return next;
     });
+  };
+
+  const waitForLiveOllamaIdle = async (maxMs: number) => {
+    const start = Date.now();
+    while (liveOllamaBusyRef.current && Date.now() - start < maxMs) {
+      await new Promise((r) => window.setTimeout(r, 80));
+    }
   };
 
   const runLiveOllamaChunk = async () => {
     const capture = wavCaptureRef.current;
     if (!capture || liveOllamaBusyRef.current) return;
 
-    const { blob, toSampleIndex } = capture.getWavBlobSince(
+    const { blob, toSampleIndex, rms } = capture.getWavBlobSince(
       liveOllamaSampleCursorRef.current,
     );
-    if (blob.size < MIN_LIVE_WAV_BYTES) return;
+    if (blob.size < MIN_LIVE_WAV_BYTES || rms < MIN_LIVE_RMS) return;
 
     liveOllamaBusyRef.current = true;
     setLiveOllamaBusy(true);
@@ -150,7 +167,80 @@ export function useRecording(
     liveOllamaTimerRef.current = window.setInterval(() => {
       void runLiveOllamaChunk();
     }, LIVE_OLLAMA_INTERVAL_MS);
-    window.setTimeout(() => void runLiveOllamaChunk(), 4_000);
+    window.setTimeout(() => void runLiveOllamaChunk(), 5_000);
+  };
+
+  const finishAfterStop = async (
+    transcriptId: string,
+    initial: Transcript,
+    hadUsableLiveText: boolean,
+    liveTextAtStop: string,
+  ) => {
+    setPostProcessing(true);
+    setTranscribing(true);
+    let updated = initial;
+    const s = settingsRef.current;
+
+    try {
+      const needsSpeakers =
+        s.identify_speakers &&
+        hadUsableLiveText &&
+        !hasSpeakerLabels(liveTextAtStop);
+      const shouldTranscribe =
+        s.auto_transcribe_on_stop &&
+        Boolean(updated.audio_path) &&
+        (!hadUsableLiveText || needsSpeakers);
+      if (shouldTranscribe) {
+        try {
+          updated = await transcribeRecordingAudio(
+            transcriptId,
+            s.transcription_model,
+          );
+          liveTextRef.current = updated.transcript_text;
+          setLiveText(updated.transcript_text);
+        } catch (e) {
+          const msg =
+            e instanceof Error ? e.message : "Transcription failed";
+          setError(
+            `${msg}. Install an Ollama speech model (e.g. ollama pull gemma4:e4b) and check Settings.`,
+          );
+        }
+      }
+
+      const finalText = updated.transcript_text.trim();
+
+      if (s.auto_instant_summary && finalText) {
+        try {
+          updated = await generateInstantSummary(
+            transcriptId,
+            s.default_model,
+          );
+        } catch {
+          /* optional */
+        }
+      }
+
+      if (s.auto_enhance_on_stop && (finalText || updated.manual_notes.trim())) {
+        try {
+          updated = await enhanceNotes(transcriptId, s.default_model);
+        } catch {
+          /* optional */
+        }
+      }
+
+      if (s.delete_audio_after_transcribe) {
+        try {
+          updated = await stripAudioAfterTranscribe(transcriptId);
+        } catch {
+          /* optional */
+        }
+      }
+
+      onSaved(updated);
+    } finally {
+      setTranscribing(false);
+      setPostProcessing(false);
+    }
   };
 
   const start = useCallback(async (title?: string): Promise<string | null> => {
@@ -190,8 +280,8 @@ export function useRecording(
             else interim += piece;
           }
           setLiveText((prev) => {
-            const base = prev.split("\n").filter(Boolean);
-            if (final) base.push(final.trim());
+            const base = stripJunkTranscript(prev).split("\n").filter(Boolean);
+            if (final && !isJunkTranscriptionLine(final)) base.push(final.trim());
             const line = base.join("\n");
             const next = interim ? `${line}\n${interim}` : line;
             liveTextRef.current = next;
@@ -236,13 +326,17 @@ export function useRecording(
     if (!wavCapture || !transcript) return;
 
     const duration = Date.now() - startRef.current;
-    let text = liveTextRef.current.trim();
     const notes = manualNotesRef.current.trim();
 
     if (liveSttMode === "ollama") {
+      await waitForLiveOllamaIdle(LIVE_OLLAMA_STOP_WAIT_MS);
       await runLiveOllamaChunk();
-      text = liveTextRef.current.trim();
     }
+
+    let text = stripJunkTranscript(liveTextRef.current.trim());
+    liveTextRef.current = text;
+    setLiveText(text);
+    const hadUsableLiveText = isUsableLiveTranscript(text);
 
     const wavBlob = wavCapture.getFullWavBlob();
     wavCapture.stop();
@@ -262,65 +356,14 @@ export function useRecording(
     });
     updated = await saveRecordingAudio(transcript.id, base64, "wav");
 
-    const shouldTranscribe =
-      settings.auto_transcribe_on_stop &&
-      wavBlob.size > 0 &&
-      !text.trim();
-    if (shouldTranscribe) {
-      setTranscribing(true);
-      try {
-        updated = await transcribeRecordingAudio(
-          transcript.id,
-          settings.transcription_model,
-        );
-        liveTextRef.current = updated.transcript_text;
-        setLiveText(updated.transcript_text);
-      } catch (e) {
-        const msg =
-          e instanceof Error ? e.message : "Transcription failed";
-        setError(
-          `${msg}. Install an Ollama speech model (e.g. ollama pull gemma4:e4b) and check Settings.`,
-        );
-      } finally {
-        setTranscribing(false);
-      }
-    }
-
-    const finalText = updated.transcript_text.trim();
-
-    if (settings.auto_instant_summary && finalText) {
-      try {
-        updated = await generateInstantSummary(
-          transcript.id,
-          settings.default_model,
-        );
-      } catch {
-        /* optional */
-      }
-    }
-
-    if (settings.auto_enhance_on_stop && (finalText || notes)) {
-      try {
-        updated = await enhanceNotes(transcript.id, settings.default_model);
-      } catch {
-        /* optional */
-      }
-    }
-
-    if (settings.delete_audio_after_transcribe) {
-      try {
-        updated = await stripAudioAfterTranscribe(transcript.id);
-      } catch {
-        /* optional */
-      }
-    }
-
     onSaved(updated);
     setCurrentId(null);
     setPendingTitle(undefined);
     setLiveSttMode("none");
     transcriptRef.current = null;
-  }, [onSaved, pendingTitle, settings, liveSttMode]);
+
+    void finishAfterStop(transcript.id, updated, hadUsableLiveText, text);
+  }, [onSaved, pendingTitle, liveSttMode]);
 
   const setManualNotesTracked = (v: string) => {
     manualNotesRef.current = v;
@@ -328,12 +371,14 @@ export function useRecording(
   };
 
   const setLiveTextTracked = (v: string) => {
-    liveTextRef.current = v;
-    setLiveText(v);
+    const cleaned = stripJunkTranscript(v);
+    liveTextRef.current = cleaned;
+    setLiveText(cleaned);
   };
 
   return {
     recording,
+    postProcessing,
     transcribing,
     elapsedMs,
     liveText,

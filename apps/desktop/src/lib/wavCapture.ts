@@ -54,11 +54,25 @@ function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   return new Blob([buffer], { type: "audio/wav" });
 }
 
+export function pcmRms(samples: Float32Array): number {
+  if (samples.length === 0) return 0;
+  let sum = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const s = samples[i];
+    sum += s * s;
+  }
+  return Math.sqrt(sum / samples.length);
+}
+
 export interface WavCaptureHandle {
   /** Full recording as WAV (for saving on stop). */
   getFullWavBlob(): Blob;
   /** New audio since `fromSampleIndex` (for live Ollama chunks). */
-  getWavBlobSince(fromSampleIndex: number): { blob: Blob; toSampleIndex: number };
+  getWavBlobSince(fromSampleIndex: number): {
+    blob: Blob;
+    toSampleIndex: number;
+    rms: number;
+  };
   sampleCount(): number;
   stop(): void;
 }
@@ -102,6 +116,7 @@ export async function createWavCapture(
       return {
         blob: encodeWav(slice, TARGET_SAMPLE_RATE),
         toSampleIndex: samples.length,
+        rms: pcmRms(slice),
       };
     },
     sampleCount() {
@@ -115,5 +130,8 @@ export async function createWavCapture(
   };
 }
 
-/** Minimum WAV payload size (~0.5s at 16 kHz) before sending to STT. */
-export const MIN_LIVE_WAV_BYTES = 16_000;
+/** Minimum WAV payload size (~1s at 16 kHz mono) before sending to STT. */
+export const MIN_LIVE_WAV_BYTES = 32_000;
+
+/** Skip near-silent chunks so the model does not return "no audio" refusals. */
+export const MIN_LIVE_RMS = 0.008;

@@ -50,6 +50,7 @@ export interface AppSettings {
   auto_transcribe_on_stop: boolean;
   google_oauth_client_id: string;
   meeting_popup_enabled: boolean;
+  identify_speakers: boolean;
 }
 
 export interface GoogleCalendarStatus {

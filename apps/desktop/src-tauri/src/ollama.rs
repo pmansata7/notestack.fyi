@@ -391,6 +391,26 @@ impl OllamaClient {
         self.transcribe_audio_bytes(model, &bytes, &file_name)
     }
 
+    /// Label speaker turns in a raw transcript (local LLM; not true diarization).
+    pub fn label_speakers(&self, model: &str, raw_transcript: &str) -> Result<String, OllamaError> {
+        let trimmed = raw_transcript.trim();
+        if trimmed.is_empty() {
+            return Ok(String::new());
+        }
+        let prompt = format!(
+            "Format this meeting transcript with speaker labels.\n\
+            Rules:\n\
+            - Prefix each turn with \"Speaker 1:\", \"Speaker 2:\", etc.\n\
+            - Use real names only if they are explicitly spoken in the transcript.\n\
+            - One line per speaker turn; keep the original wording.\n\
+            - Do not add commentary or invent dialogue.\n\
+            - Output only the labeled transcript.\n\n\
+            Transcript:\n{}\n",
+            trimmed
+        );
+        self.generate(model, &prompt)
+    }
+
     fn post_audio_transcription(
         &self,
         model: &str,
@@ -679,6 +699,14 @@ fn which_command(name: &str) -> Result<PathBuf, ()> {
     Err(())
 }
 
+fn is_refusal_transcription(text: &str) -> bool {
+    let lower = text.to_lowercase();
+    lower.contains("cannot transcribe")
+        || lower.contains("no audio was provided")
+        || lower.contains("please provide the audio")
+        || lower.contains("unable to transcribe")
+}
+
 fn parse_transcription_response(body: &str) -> Result<String, OllamaError> {
     let trimmed = body.trim();
     if trimmed.is_empty() {
@@ -687,9 +715,16 @@ fn parse_transcription_response(body: &str) -> Result<String, OllamaError> {
     if let Ok(parsed) = serde_json::from_str::<TranscriptionResponse>(trimmed) {
         if let Some(text) = parsed.text {
             if !text.trim().is_empty() {
-                return Ok(text.trim().to_string());
+                let out = text.trim().to_string();
+                if is_refusal_transcription(&out) {
+                    return Ok(String::new());
+                }
+                return Ok(out);
             }
         }
+    }
+    if is_refusal_transcription(trimmed) {
+        return Ok(String::new());
     }
     Ok(trimmed.to_string())
 }

@@ -185,10 +185,18 @@ export function SettingsPanel({
       <label className="check">
         <input
           type="checkbox"
+          checked={draft.identify_speakers}
+          onChange={() => toggle("identify_speakers")}
+        />
+        Label speakers in transcript (Speaker 1, Speaker 2, …)
+      </label>
+      <label className="check">
+        <input
+          type="checkbox"
           checked={draft.floating_pane_visible}
           onChange={() => toggle("floating_pane_visible")}
         />
-        Show Live Assist floating pane while recording
+        Show Live Assist floating pane while recording (off = Granola-style in main window)
       </label>
       <label>
         Default meeting template

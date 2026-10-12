@@ -1,0 +1,70 @@
+# Automatic PR risk reviews via pmansata7/code-review-bot (BDK).
+# Required repo secret: CURSOR_API_KEY (User API key from Cursor dashboard).
+
+name: PR risk review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-risk-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout code-review-bot
+        uses: actions/checkout@v4
+        with:
+          repository: pmansata7/code-review-bot
+          ref: master
+          path: code-review-bot
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: code-review-bot/package-lock.json
+
+      - name: Install bot dependencies
+        working-directory: code-review-bot
+        run: npm ci
+
+      - name: Start BDK server
+        working-directory: code-review-bot
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          # Default multi mount (/<dirname>/v1/*) matches `bdk github replay` URL discovery.
+          npx @cursor/bdk serve --dir . --dev --port 3000 &
+          echo $! > "$RUNNER_TEMP/bdk-serve.pid"
+          for i in $(seq 1 45); do
+            if curl -sf http://127.0.0.1:3000/code-review-bot/v1/info >/dev/null; then
+              echo "BDK server ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "BDK server did not become ready"
+          exit 1
+
+      - name: Run PR review
+        working-directory: code-review-bot
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR="${{ github.event.pull_request.number }}"
+          ACTION="${{ github.event.action }}"
+          npx @cursor/bdk github replay "pmansata7/notestack.fyi#${PR}" \
+            --dir . \
+            --events pull_request \
+            --action "$ACTION"
+          kill "$(cat "$RUNNER_TEMP/bdk-serve.pid")" 2>/dev/null || true
