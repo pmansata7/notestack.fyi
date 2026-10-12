@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   AppSettings,
+  ForegroundMeeting,
+  GoogleCalendarStatus,
   HardwareHints,
   OllamaInstallStatus,
   OllamaModel,
@@ -200,6 +202,26 @@ export async function generateMeetingPrep(
   return invoke("generate_meeting_prep", {
     args: { event_title: eventTitle, model },
   });
+}
+
+export async function googleCalendarStatus(): Promise<GoogleCalendarStatus> {
+  return invoke("google_calendar_status");
+}
+
+export async function googleCalendarConnect(): Promise<GoogleCalendarStatus> {
+  return invoke("google_calendar_connect");
+}
+
+export async function googleCalendarDisconnect(): Promise<GoogleCalendarStatus> {
+  return invoke("google_calendar_disconnect");
+}
+
+export async function googleCalendarSync(): Promise<AppSettings> {
+  return invoke("google_calendar_sync");
+}
+
+export async function detectForegroundMeeting(): Promise<ForegroundMeeting | null> {
+  return invoke("detect_foreground_meeting");
 }
 
 export async function runLiveSkill(

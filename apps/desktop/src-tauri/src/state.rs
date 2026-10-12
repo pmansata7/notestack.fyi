@@ -15,6 +15,12 @@ pub struct CalendarEvent {
     pub starts_at: String,
     pub duration_minutes: i64,
     pub attendees: String,
+    #[serde(default)]
+    pub meeting_url: Option<String>,
+    #[serde(default)]
+    pub conference_type: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,6 +39,9 @@ pub struct AppSettings {
     /// Ollama model for speech-to-text (e.g. gemma4:e4b). Empty uses DEFAULT_TRANSCRIPTION_MODEL.
     pub transcription_model: String,
     pub auto_transcribe_on_stop: bool,
+    /// OAuth 2.0 client ID for Google Calendar (desktop app).
+    pub google_oauth_client_id: String,
+    pub meeting_popup_enabled: bool,
     /// Label speaker turns after final transcription (LLM formatting).
     pub identify_speakers: bool,
 }
@@ -53,6 +62,8 @@ impl Default for AppSettings {
             dictation_enabled: false,
             transcription_model: crate::ollama::DEFAULT_TRANSCRIPTION_MODEL.to_string(),
             auto_transcribe_on_stop: true,
+            google_oauth_client_id: String::new(),
+            meeting_popup_enabled: true,
             identify_speakers: true,
         }
     }
@@ -72,6 +83,8 @@ impl AppSettings {
     pub const DICTATION_KEY: &'static str = "dictation_enabled";
     pub const TRANSCRIPTION_MODEL_KEY: &'static str = "transcription_model";
     pub const AUTO_TRANSCRIBE_KEY: &'static str = "auto_transcribe_on_stop";
+    pub const GOOGLE_CLIENT_ID_KEY: &'static str = "google_oauth_client_id";
+    pub const MEETING_POPUP_KEY: &'static str = "meeting_popup_enabled";
     pub const IDENTIFY_SPEAKERS_KEY: &'static str = "identify_speakers";
 
     pub fn load(db: &Database) -> Self {
@@ -124,6 +137,12 @@ impl AppSettings {
         }
         if let Ok(Some(v)) = db.get_setting(Self::AUTO_TRANSCRIBE_KEY) {
             s.auto_transcribe_on_stop = v == "true";
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::GOOGLE_CLIENT_ID_KEY) {
+            s.google_oauth_client_id = v;
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::MEETING_POPUP_KEY) {
+            s.meeting_popup_enabled = v != "false";
         }
         if let Ok(Some(v)) = db.get_setting(Self::IDENTIFY_SPEAKERS_KEY) {
             s.identify_speakers = v == "true";
@@ -189,6 +208,15 @@ impl AppSettings {
         db.set_setting(
             Self::AUTO_TRANSCRIBE_KEY,
             if self.auto_transcribe_on_stop {
+                "true"
+            } else {
+                "false"
+            },
+        )?;
+        db.set_setting(Self::GOOGLE_CLIENT_ID_KEY, &self.google_oauth_client_id)?;
+        db.set_setting(
+            Self::MEETING_POPUP_KEY,
+            if self.meeting_popup_enabled {
                 "true"
             } else {
                 "false"

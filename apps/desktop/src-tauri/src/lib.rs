@@ -1,5 +1,6 @@
 mod commands;
 mod db;
+mod google_calendar;
 mod ollama;
 mod state;
 mod system;
@@ -47,6 +48,11 @@ pub fn run() {
             commands::ollama_pull_model,
             commands::ollama_test_model,
             commands::generate_notes_from_transcript,
+            commands::google_calendar_status,
+            commands::google_calendar_connect,
+            commands::google_calendar_disconnect,
+            commands::google_calendar_sync,
+            commands::detect_foreground_meeting,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
