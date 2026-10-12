@@ -30,7 +30,13 @@ If the user explicitly authorizes it and branch protection allows, you may push 
 
 ## Production deploy
 
-Merging to `main` triggers **Vercel production** (GitHub integration; builds **`apps/web`** per root `vercel.json`). No extra deploy or DB migrate step in the agent workflow.
+Merging to `main` triggers **Vercel production** (GitHub integration; builds **`apps/web`** per root `vercel.json`). Vercel does **not** run database migrations.
+
+## Supabase migrations (GitHub Actions)
+
+After merge to `main`, schema changes under **`supabase/migrations/`** are applied by **`.github/workflows/supabase-migrate.yml`** (push when migrations or that workflow change, or manual **workflow_dispatch**). The agent must **commit new migration files** in the PR; do not apply production schema only via the Supabase SQL Editor unless the user explicitly asks.
+
+One-time repo secrets (user configures in GitHub → Settings → Secrets and variables → Actions): **`SUPABASE_ACCESS_TOKEN`**, **`SUPABASE_PROJECT_REF`**, **`SUPABASE_DB_PASSWORD`**. See ship integration docs for where to create each value.
 
 ## PR risk review
 
