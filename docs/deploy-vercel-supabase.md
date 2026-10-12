@@ -99,3 +99,9 @@ npm run dev
 ## 6. CI / previews
 
 Vercel preview deployments use the same env vars you attach to **Preview**. Use a separate Supabase project or branch database if you do not want preview signups in production data.
+
+### GitHub Actions: `supabase-migrate.yml`
+
+Production schema changes under `supabase/migrations/` are applied on push to `main` via [`.github/workflows/supabase-migrate.yml`](../.github/workflows/supabase-migrate.yml). Configure repository secrets **`SUPABASE_ACCESS_TOKEN`**, **`SUPABASE_DB_PASSWORD`**, and **`SUPABASE_PROJECT_REF`**.
+
+**`SUPABASE_PROJECT_REF` must be the 20-character Reference ID** from Supabase Dashboard → Project Settings → General (lowercase letters only). It is the `<ref>` in `https://<ref>.supabase.co` — **not** the project display name and **not** `project_id` in `supabase/config.toml`.

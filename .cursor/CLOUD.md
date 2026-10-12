@@ -38,7 +38,9 @@ Merging to `main` triggers **Vercel production** (GitHub integration; builds **`
 
 After merge to `main`, schema changes under **`supabase/migrations/`** are applied by **`.github/workflows/supabase-migrate.yml`** (push when migrations or that workflow change, or manual **workflow_dispatch**). The agent must **commit new migration files** in the PR; do not apply production schema only via the Supabase SQL Editor unless the user explicitly asks.
 
-One-time repo secrets (user configures in GitHub → Settings → Secrets and variables → Actions): **`SUPABASE_ACCESS_TOKEN`**, **`SUPABASE_PROJECT_REF`**, **`SUPABASE_DB_PASSWORD`**. See ship integration docs for where to create each value.
+One-time repo secrets (user configures in GitHub → Settings → Secrets and variables → Actions): **`SUPABASE_ACCESS_TOKEN`**, **`SUPABASE_PROJECT_REF`**, **`SUPABASE_DB_PASSWORD`**. See [`docs/notestack-ship-integration.md`](../docs/notestack-ship-integration.md) for where to create each value.
+
+**`SUPABASE_PROJECT_REF` must be the 20-character Reference ID** from Dashboard → Project Settings → General (lowercase letters only). It is the `<ref>` in `https://<ref>.supabase.co` — **not** the project name and **not** `project_id` in `supabase/config.toml` (e.g. do not use `notestack`).
 
 ## PR risk review
 
