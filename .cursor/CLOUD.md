@@ -8,6 +8,8 @@ Cloud-only instructions (read with `.cursor/rules/*.mdc`). Uses **GITHUB_TOKEN**
 
 - Monorepo: app lives in **`apps/web`** (Vite). Supabase config at repo root; **no Prisma** and no database migrate step on Vercel.
 
+**CI on pull requests:** Changes under **`apps/web/`** (and the web CI workflow file) run **`.github/workflows/web-ci.yml`**, which installs with `npm ci` and runs **`npm run build`** — that is the automated test gate today (`tsc -b` typecheck plus Vite production build). After merge to **`main`**, new files under **`supabase/migrations/`** are applied by **`.github/workflows/supabase-migrate.yml`** (not on Vercel).
+
 ## When the user says ship, merge to main, or deploy
 
 1. Create a feature branch from `main` (unless already on one).
