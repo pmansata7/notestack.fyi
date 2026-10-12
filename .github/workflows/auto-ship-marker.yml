@@ -1,0 +1,101 @@
+# When the PR body contains `<!-- auto-ship -->`, adds label `auto-merge` and merges
+# when checks pass (same run). Bot-applied labels do not fire `pull_request: labeled`,
+# so merge runs here instead of relying on `.github/workflows/auto-merge.yml`.
+
+name: Auto-ship marker and merge
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  add-auto-merge-label:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    outputs:
+      merge_requested: ${{ steps.marker.outputs.merge_requested }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Add auto-merge label from auto-ship marker
+        id: marker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          body="$(gh pr view "$PR" -R "$REPO" --json body -q .body)"
+          if ! grep -qF '<!-- auto-ship -->' <<< "$body"; then
+            echo "PR body does not contain <!-- auto-ship -->; skipping."
+            echo "merge_requested=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "merge_requested=true" >> "$GITHUB_OUTPUT"
+
+          if gh pr view "$PR" -R "$REPO" --json labels -q '.labels[].name' | grep -qxF 'auto-merge'; then
+            echo "Label auto-merge already present; skipping add."
+            exit 0
+          fi
+
+          gh pr edit "$PR" -R "$REPO" --add-label auto-merge
+          echo "Added label auto-merge (auto-ship marker)."
+
+  merge-when-ready:
+    needs: add-auto-merge-label
+    if: needs.add-auto-merge-label.outputs.merge_requested == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      statuses: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Merge when checks pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          echo "Auto-merge requested for PR #${PR}"
+
+          bash scripts/wait-for-external-pr-checks.sh "$PR"
+
+          decision="$(gh pr view "$PR" --json reviewDecision -q .reviewDecision)"
+          if [ "$decision" = "CHANGES_REQUESTED" ]; then
+            echo "A review requested changes; not merging."
+            exit 1
+          fi
+
+          mergeable="$(gh pr view "$PR" --json mergeable -q .mergeable)"
+          if [ "$mergeable" != "MERGEABLE" ]; then
+            echo "PR is not mergeable (mergeable=${mergeable})."
+            exit 1
+          fi
+
+          # External checks already validated; UNSTABLE is common while merge jobs run.
+          state="$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)"
+          case "$state" in
+            CLEAN|HAS_HOOKS|UNSTABLE)
+              echo "mergeStateStatus=${state}; proceeding (mergeable=${mergeable})."
+              ;;
+            BEHIND|DIRTY|BLOCKED)
+              echo "mergeStateStatus=${state}; not merging."
+              exit 1
+              ;;
+            *)
+              echo "mergeStateStatus=${state}; not merging."
+              exit 1
+              ;;
+          esac
+
+          gh pr merge "$PR" --squash --delete-branch
+          echo "Merged PR #${PR} (squash)."
