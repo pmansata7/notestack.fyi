@@ -49,8 +49,9 @@ jobs:
         run: |
           set -euo pipefail
           body="$(gh pr view "$PR" --json body -q .body)"
-          if grep -qF '<!-- auto-ship -->' <<< "$body"; then
-            echo "PR has <!-- auto-ship -->; merge handled by auto-ship-marker workflow."
+          head_ref="$(gh pr view "$PR" --json headRefName -q .headRefName)"
+          if grep -qF '<!-- auto-ship -->' <<< "$body" || [[ "$head_ref" == cursor/* ]]; then
+            echo "PR is auto-ship / Cloud Agent; merge handled by auto-ship-marker workflow."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
