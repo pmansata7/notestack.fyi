@@ -1,23 +1,23 @@
-# When the PR body contains `<!-- auto-ship -->`, adds label `auto-merge` and merges
-# when checks pass (same run). Bot-applied labels do not fire `pull_request: labeled`,
-# so merge runs here instead of relying on `.github/workflows/auto-merge.yml`.
+# Cloud Agent PRs (head branch `cursor/*`) and PRs with `<!-- auto-ship -->` in the body
+# get label `auto-merge` and squash-merge when checks pass (same workflow run).
+# Bot-applied labels do not fire `pull_request: labeled`, so merge runs here instead
+# of relying on `.github/workflows/auto-merge.yml`.
 
 name: Auto-ship marker and merge
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, edited, synchronize, reopened, ready_for_review]
 
 jobs:
   add-auto-merge-label:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     outputs:
       merge_requested: ${{ steps.marker.outputs.merge_requested }}
     permissions:
       pull-requests: write
     steps:
-      - name: Add auto-merge label from auto-ship marker
+      - name: Queue auto-merge for Cloud Agent PRs
         id: marker
         env:
           GH_TOKEN: ${{ github.token }}
@@ -27,13 +27,30 @@ jobs:
           set -euo pipefail
 
           body="$(gh pr view "$PR" -R "$REPO" --json body -q .body)"
-          if ! grep -qF '<!-- auto-ship -->' <<< "$body"; then
-            echo "PR body does not contain <!-- auto-ship -->; skipping."
+          head_ref="$(gh pr view "$PR" -R "$REPO" --json headRefName -q .headRefName)"
+
+          wants_merge=false
+          if grep -qF '<!-- auto-ship -->' <<< "$body"; then
+            wants_merge=true
+            echo "Auto-merge: <!-- auto-ship --> marker present."
+          elif [[ "$head_ref" == cursor/* ]]; then
+            wants_merge=true
+            echo "Auto-merge: Cloud Agent branch (${head_ref})."
+          fi
+
+          if [ "$wants_merge" = "false" ]; then
+            echo "No auto-merge trigger (not cursor/* and no auto-ship marker); skipping."
             echo "merge_requested=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "merge_requested=true" >> "$GITHUB_OUTPUT"
+
+          is_draft="$(gh pr view "$PR" -R "$REPO" --json isDraft -q .isDraft)"
+          if [ "$is_draft" = "true" ]; then
+            echo "PR is still a draft; will auto-merge after it is marked ready for review."
+            exit 0
+          fi
 
           if gh pr view "$PR" -R "$REPO" --json labels -q '.labels[].name' | grep -qxF 'auto-merge'; then
             echo "Label auto-merge already present; skipping add."
@@ -41,7 +58,7 @@ jobs:
           fi
 
           gh pr edit "$PR" -R "$REPO" --add-label auto-merge
-          echo "Added label auto-merge (auto-ship marker)."
+          echo "Added label auto-merge."
 
   merge-when-ready:
     needs: add-auto-merge-label
@@ -64,6 +81,12 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
+
+          is_draft="$(gh pr view "$PR" --json isDraft -q .isDraft)"
+          if [ "$is_draft" = "true" ]; then
+            echo "Still a draft; not merging yet."
+            exit 0
+          fi
 
           echo "Auto-merge requested for PR #${PR}"
 
