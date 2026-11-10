@@ -1,19 +1,19 @@
 # Supabase free-tier heartbeat
 
-Supabase **pauses** projects on the free plan after about **7 days without activity**. 
+Supabase **pauses** projects on the free plan after about **7 days without activity**.
 
-A scheduled GitHub Action (`.github/workflows/supabase-heartbeat.yml`) sends a lightweight **REST** request once per day so the project stays active. Failed runs show up as red in the Actions tab.
+A scheduled GitHub Action (`.github/workflows/supabase-heartbeat.yml`) sends a lightweight **`GET /auth/v1/health`** request once per day so the project stays active. Failed runs show up as red in the Actions tab.
 
 ## One-time setup (repository owner)
 
 1. Open [Supabase Dashboard](https://supabase.com/dashboard/project/_/settings/api) → **Project Settings** → **API**.
-2. Copy the **Project URL** and the **anon public** key (not the service role unless you intentionally want broader scope).
+2. Copy the **Project URL** and the **publishable** key (`sb_publishable_…`) or **legacy anon public** key from the same page (not the service role key).
 3. In GitHub → **pmansata7/notestack.fyi** → **Settings** → **Secrets and variables** → **Actions**, add:
 
    | Secret | Value |
    |--------|--------|
    | `SUPABASE_URL` | `https://YOUR_PROJECT_REF.supabase.co` (your project) |
-   | `SUPABASE_ANON_KEY` | anon key from step 2 |
+   | `SUPABASE_ANON_KEY` | publishable or legacy anon key from step 2 |
 
 4. **Actions** → **Supabase heartbeat** → **Run workflow** once to confirm a green run, then rely on the daily schedule (14:00 UTC).
 
