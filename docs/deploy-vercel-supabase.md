@@ -106,4 +106,4 @@ Production schema changes under `supabase/migrations/` are applied on push to `m
 
 **`SUPABASE_PROJECT_REF` must be the 20-character Reference ID** from Supabase Dashboard → Project Settings → General (lowercase letters only). It is the `<ref>` in `https://<ref>.supabase.co` — **not** the project display name and **not** `project_id` in `supabase/config.toml`.
 ## Free-tier pause (production Supabase)
-If GitHub emails about Supabase pausing due to inactivity, configure the daily **Supabase heartbeat** workflow — see [supabase-heartbeat.md](supabase-heartbeat.md).
+If GitHub emails about Supabase pausing due to inactivity, configure the daily **Supabase heartbeat** workflow (PostgREST database ping — not `/auth/v1/health` alone) — see [supabase-heartbeat.md](supabase-heartbeat.md).
