@@ -24,10 +24,10 @@ Configure once under **Settings → Secrets and variables → Actions**:
 
 | Secret | Required | Where to get it |
 |--------|----------|------------------|
-| `DIRECT_URL` | Yes | Supabase → **Database** → Connection string → **Session pooler** (URI, port **5432**) |
+| `DIRECT_URL` | Yes | Supabase → **Database** → Connection string → **Session pooler** (URI, port **5432**) — see below |
 | `CURSOR_API_KEY` | Yes (PR review) | Cursor dashboard — not used by migrate workflow |
 
-Optional (local `supabase link` only — CI uses `supabase db push --db-url`):
+Optional (local `supabase link` only — CI passes the URI via `supabase db push --remote`):
 
 | Secret | Where to get it |
 |--------|------------------|
@@ -35,7 +35,27 @@ Optional (local `supabase link` only — CI uses `supabase db push --db-url`):
 | `SUPABASE_DB_PASSWORD` | Project **Settings → Database** |
 | `SUPABASE_PROJECT_REF` | 20-character ref from **Settings → General** |
 
-After adding `DIRECT_URL`, run **Actions → Database deploy → Run workflow** once to verify. Do not rely on auto-ship dispatch until the secret is set.
+### `DIRECT_URL` format (GitHub Actions)
+
+Copy the **Session pooler** URI from [Supabase Dashboard → Database → Connection string](https://supabase.com/dashboard/project/_/database/settings) (method **Session pooler**, port **5432**). Do **not** use the **Direct connection** host `db.<project-ref>.supabase.co` — GitHub Actions runners often fail with `ECONNREFUSED` on that host (IPv6).
+
+Example shape (replace placeholders; use your real database password):
+
+```text
+postgresql://postgres.abcdefghijklmnopqrst:YOUR_DB_PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+```
+
+- **Host:** `*.pooler.supabase.com` (not `db.<ref>.supabase.co`)
+- **Port:** `5432` (Session mode — not `6543` Transaction pooler)
+- **User:** `postgres.<project-ref>` (20-character ref from **Settings → General**)
+
+Paste the full URI into **GitHub → Settings → Secrets and variables → Actions → `DIRECT_URL`**.
+
+### Supabase network restrictions
+
+If the workflow still cannot connect, open [Database settings → Network restrictions](https://supabase.com/dashboard/project/_/database/settings#network-restrictions) for the project. GitHub Actions uses dynamic egress IPs, so either **allow connections from anywhere** (recommended for CI) or turn restrictions off until you can maintain an allow list. Restrictions that block unknown IPs produce errors mentioning **Network Restrictions**.
+
+After adding or fixing `DIRECT_URL`, run **Actions → Database deploy → Run workflow** once to verify. Do not rely on auto-ship dispatch until the secret is set.
 
 ---
 

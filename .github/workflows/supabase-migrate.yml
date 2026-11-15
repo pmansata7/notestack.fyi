@@ -1,9 +1,10 @@
 # Production Database deploy on push to main when supabase/migrations/ changes.
 #
 # Required repository secret (Settings → Secrets and variables → Actions):
-#   DIRECT_URL — Supabase session pooler URI, port 5432.
+#   DIRECT_URL — Supabase Session pooler URI (host *.pooler.supabase.com, port 5432).
+#   Do not use the direct host db.<ref>.supabase.co in CI (IPv6 / connection refused on GHA).
 #
-# Optional (local `supabase link` only — not used in CI with --db-url):
+# Optional (local `supabase link` only — not used in CI):
 #   SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD
 
 name: Database deploy
@@ -35,12 +36,47 @@ jobs:
         env:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
+          set -euo pipefail
           if [[ -z "${DIRECT_URL// }" ]]; then
-            echo "::error::Missing DIRECT_URL GitHub Actions secret (Supabase session pooler URI, port 5432)."
+            echo "::error::Missing DIRECT_URL GitHub Actions secret (Supabase Session pooler URI, port 5432)."
             exit 1
+          fi
+
+          uri="${DIRECT_URL#postgresql://}"
+          uri="${uri#postgres://}"
+          userinfo="${uri%%@*}"
+          rest="${uri#*@}"
+          hostport="${rest%%/*}"
+          host="${hostport%%:*}"
+          port="${hostport##*:}"
+          user="${userinfo%%:*}"
+
+          if [[ "$host" =~ ^db\.[a-z0-9]+\.supabase\.co$ ]]; then
+            echo "::error::DIRECT_URL uses direct host \`db.<ref>.supabase.co\`. Use Session pooler (\`*.pooler.supabase.com:5432\`) instead. See docs/notestack-ship-integration.md."
+            exit 1
+          fi
+          if [[ "$host" != *pooler.supabase.com ]]; then
+            echo "::error::DIRECT_URL host must be a Supabase pooler (\`*.pooler.supabase.com\`), got: ${host}"
+            exit 1
+          fi
+          if [[ "$port" != "5432" ]]; then
+            echo "::error::DIRECT_URL must use port 5432 (Session pooler), not ${port} (Transaction pooler uses 6543)."
+            exit 1
+          fi
+          if [[ "$user" != postgres.* ]] && [[ "$user" != "postgres" ]]; then
+            echo "::warning::DIRECT_URL user is \`${user}\`; Session pooler usually uses \`postgres.<project-ref>\`."
+          elif [[ "$user" == "postgres" ]]; then
+            echo "::warning::DIRECT_URL user is \`postgres\`; Session pooler URIs usually use \`postgres.<project-ref>\` (see Supabase connection string UI)."
           fi
 
       - name: Push Supabase SQL migrations
         env:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
-        run: supabase db push --yes --db-url "$DIRECT_URL"
+        run: |
+          set -euo pipefail
+          if supabase db push --help 2>&1 | grep -q -- '--remote'; then
+            supabase db push --yes --remote "$DIRECT_URL"
+          else
+            echo "::warning::Supabase CLI lacks --remote; falling back to deprecated --db-url."
+            supabase db push --yes --db-url "$DIRECT_URL"
+          fi
