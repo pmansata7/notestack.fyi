@@ -1,11 +1,12 @@
-# Apply Supabase migrations on push to main (when supabase/migrations/ or this file changes).
+# Production Database deploy on push to main when supabase/migrations/ changes.
 #
-# Required repository secrets (Settings → Secrets and variables → Actions):
-#   SUPABASE_ACCESS_TOKEN — Personal access token from https://supabase.com/dashboard/account/tokens
-#   SUPABASE_PROJECT_REF  — Project Settings → General → Reference ID
-#   SUPABASE_DB_PASSWORD  — Project Settings → Database → Database password
+# Required repository secret (Settings → Secrets and variables → Actions):
+#   DIRECT_URL — Supabase session pooler URI, port 5432.
+#
+# Optional (local `supabase link` only — not used in CI with --db-url):
+#   SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD
 
-name: Supabase migrations
+name: Database deploy
 
 on:
   push:
@@ -30,27 +31,16 @@ jobs:
         with:
           version: latest
 
-      - name: Validate Supabase project ref secret
+      - name: Validate DIRECT_URL secret
         env:
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          if [[ ! "$SUPABASE_PROJECT_REF" =~ ^[a-z]{20}$ ]]; then
-            echo "::error::SUPABASE_PROJECT_REF is invalid (expected exactly 20 lowercase letters)."
-            echo "Set it from Supabase Dashboard → Project Settings → General → Reference ID."
-            echo "This is NOT the project display name and NOT project_id in supabase/config.toml."
-            echo "Your ref appears in the project URL: https://<ref>.supabase.co"
+          if [[ -z "${DIRECT_URL// }" ]]; then
+            echo "::error::Missing DIRECT_URL GitHub Actions secret (Supabase session pooler URI, port 5432)."
             exit 1
           fi
 
-      - name: Link Supabase project
+      - name: Push Supabase SQL migrations
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
-
-      - name: Push migrations
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: supabase db push
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: supabase db push --yes --db-url "$DIRECT_URL"

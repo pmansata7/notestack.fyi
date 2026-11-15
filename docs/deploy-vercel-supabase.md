@@ -102,8 +102,6 @@ Vercel preview deployments use the same env vars you attach to **Preview**. Use 
 
 ### GitHub Actions: `supabase-migrate.yml`
 
-Production schema changes under `supabase/migrations/` are applied on push to `main` via [`.github/workflows/supabase-migrate.yml`](../.github/workflows/supabase-migrate.yml). Configure repository secrets **`SUPABASE_ACCESS_TOKEN`**, **`SUPABASE_DB_PASSWORD`**, and **`SUPABASE_PROJECT_REF`**.
-
-**`SUPABASE_PROJECT_REF` must be the 20-character Reference ID** from Supabase Dashboard → Project Settings → General (lowercase letters only). It is the `<ref>` in `https://<ref>.supabase.co` — **not** the project display name and **not** `project_id` in `supabase/config.toml`.
+Production schema changes under `supabase/migrations/` are applied on push to `main` via [`.github/workflows/supabase-migrate.yml`](../.github/workflows/supabase-migrate.yml). Add GitHub Actions secret **`DIRECT_URL`** (Supabase session pooler URI, port 5432). See [`docs/notestack-ship-integration.md`](notestack-ship-integration.md).
 ## Free-tier pause (production Supabase)
 If GitHub emails about Supabase pausing due to inactivity, configure the daily **Supabase heartbeat** workflow (PostgREST database ping — not `/auth/v1/health` alone) — see [supabase-heartbeat.md](supabase-heartbeat.md).

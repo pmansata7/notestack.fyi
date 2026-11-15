@@ -69,7 +69,7 @@ jobs:
       pull-requests: write
       checks: read
       statuses: read
-      actions: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -122,3 +122,8 @@ jobs:
 
           gh pr merge "$PR" --squash --delete-branch
           echo "Merged PR #${PR} (squash)."
+
+          if gh pr view "$PR" --json files -q '.files[].path' | grep -qE '^supabase/migrations/'; then
+            echo "Database-related paths changed; dispatching Database deploy on main."
+            gh workflow run supabase-migrate.yml --ref main
+          fi
