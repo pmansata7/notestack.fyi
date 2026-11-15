@@ -18,21 +18,24 @@ See also [`.cursor/CLOUD.md`](../.cursor/CLOUD.md) for agent-specific rules (aut
 
 ---
 
-## GitHub repository secrets (Supabase migrate workflow)
+## GitHub repository secrets (Database deploy workflow)
 
 Configure once under **Settings → Secrets and variables → Actions**:
 
+| Secret | Required | Where to get it |
+|--------|----------|------------------|
+| `DIRECT_URL` | Yes | Supabase → **Database** → Connection string → **Session pooler** (URI, port **5432**) |
+| `CURSOR_API_KEY` | Yes (PR review) | Cursor dashboard — not used by migrate workflow |
+
+Optional (local `supabase link` only — CI uses `supabase db push --db-url`):
+
 | Secret | Where to get it |
 |--------|------------------|
-| `SUPABASE_ACCESS_TOKEN` | [Account tokens](https://supabase.com/dashboard/account/tokens) — personal access token for the CLI |
-| `SUPABASE_DB_PASSWORD` | Project **Settings → Database** — database password |
-| `SUPABASE_PROJECT_REF` | Project **Settings → General → Reference ID** |
+| `SUPABASE_ACCESS_TOKEN` | [Account tokens](https://supabase.com/dashboard/account/tokens) |
+| `SUPABASE_DB_PASSWORD` | Project **Settings → Database** |
+| `SUPABASE_PROJECT_REF` | 20-character ref from **Settings → General** |
 
-### Reference ID (`SUPABASE_PROJECT_REF`)
-
-**`SUPABASE_PROJECT_REF` must be the 20-character Reference ID** from Dashboard → Project Settings → General (lowercase letters only). It is the `<ref>` in `https://<ref>.supabase.co` — **not** the project display name and **not** `project_id` in `supabase/config.toml` (e.g. do not use `notestack`).
-
-The migrate workflow validates this format before `supabase link`. A wrong value (common mistake: copying `project_id` from `config.toml`) causes link or push to fail with a confusing CLI error.
+After adding `DIRECT_URL`, run **Actions → Database deploy → Run workflow** once to verify. Do not rely on auto-ship dispatch until the secret is set.
 
 ---
 
