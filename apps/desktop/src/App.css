@@ -96,9 +96,7 @@ body {
 }
 
 .brand-logo {
-  display: block;
-  height: 1.625rem;
-  width: auto;
+  display: inline-flex;
   max-width: 10.5rem;
 }
 
