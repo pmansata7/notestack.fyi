@@ -1,5 +1,6 @@
 mod commands;
 mod db;
+mod legacy_paths;
 mod google_calendar;
 mod ollama;
 mod state;

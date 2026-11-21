@@ -234,8 +234,9 @@ impl AppSettings {
     }
 }
 
+use crate::legacy_paths::LEGACY_MAC_APP_SUPPORT_DIR;
+
 const APP_DATA_DIR_NAME: &str = "NoteStack";
-const LEGACY_APP_DATA_DIR_NAME: &str = "Record Plus";
 const BOOTSTRAP_FILE: &str = "bootstrap.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -247,7 +248,7 @@ struct BootstrapConfig {
 pub fn bootstrap_dir() -> PathBuf {
     if let Some(parent) = dirs_data_local() {
         let new_dir = parent.join(APP_DATA_DIR_NAME);
-        let legacy_dir = parent.join(LEGACY_APP_DATA_DIR_NAME);
+        let legacy_dir = parent.join(LEGACY_MAC_APP_SUPPORT_DIR);
         if !new_dir.exists() && legacy_dir.is_dir() {
             let _ = fs::rename(&legacy_dir, &new_dir);
         }

@@ -101,7 +101,8 @@ fn relocate_empty_storage(old_dir: &PathBuf, new_dir: &PathBuf) -> Result<(), St
     if old_dir == new_dir {
         return Ok(());
     }
-    for name in ["notestack.db", "record-plus.db"] {
+    use crate::legacy_paths::LEGACY_DB_FILENAME;
+    for name in ["notestack.db", LEGACY_DB_FILENAME] {
         let from = old_dir.join(name);
         let to = new_dir.join(name);
         if from.is_file() && !to.exists() {

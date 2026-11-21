@@ -20,10 +20,10 @@ export function Header() {
         </Link>
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <a href="/#features" className="ns-nav-link hidden sm:inline">
-            Features
+            Product
           </a>
           <a href="/#how-it-works" className="ns-nav-link hidden sm:inline">
-            How it works
+            Flow
           </a>
           <NavLink to="/privacy" className={navLinkClass}>
             Privacy
