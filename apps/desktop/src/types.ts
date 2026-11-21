@@ -51,6 +51,21 @@ export interface AppSettings {
   google_oauth_client_id: string;
   meeting_popup_enabled: boolean;
   identify_speakers: boolean;
+  slack_webhook_url: string;
+  slack_auto_post_on_enhance: boolean;
+  notion_integration_token: string;
+  notion_database_id: string;
+  notion_auto_post_on_enhance: boolean;
+  zapier_webhook_url: string;
+  zapier_auto_post_on_enhance: boolean;
+}
+
+export type ShareChannel = "slack" | "notion" | "zapier";
+
+export interface ShareResult {
+  channel: string;
+  ok: boolean;
+  message: string;
 }
 
 export interface GoogleCalendarStatus {

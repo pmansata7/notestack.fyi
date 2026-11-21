@@ -7,6 +7,8 @@ import type {
   OllamaInstallStatus,
   OllamaModel,
   OllamaStatus,
+  ShareChannel,
+  ShareResult,
   Transcript,
 } from "./types";
 
@@ -222,6 +224,36 @@ export async function googleCalendarSync(): Promise<AppSettings> {
 
 export async function detectForegroundMeeting(): Promise<ForegroundMeeting | null> {
   return invoke("detect_foreground_meeting");
+}
+
+export async function shareMeetingNote(
+  transcriptId: string,
+  channel: ShareChannel,
+): Promise<void> {
+  return invoke("share_meeting_note", {
+    transcript_id: transcriptId,
+    channel,
+  });
+}
+
+export async function autoShareMeetingNote(
+  transcriptId: string,
+): Promise<ShareResult[]> {
+  return invoke("auto_share_meeting_note", { transcript_id: transcriptId });
+}
+
+export async function testIntegrationConnector(
+  channel: ShareChannel | "notion",
+): Promise<void> {
+  return invoke("test_integration_connector", { channel });
+}
+
+export async function buildMeetingExportMarkdown(
+  transcriptId: string,
+): Promise<string> {
+  return invoke("build_meeting_export_markdown", {
+    transcript_id: transcriptId,
+  });
 }
 
 export async function runLiveSkill(

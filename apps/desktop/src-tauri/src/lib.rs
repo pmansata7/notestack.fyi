@@ -2,6 +2,7 @@ mod commands;
 mod db;
 mod legacy_paths;
 mod google_calendar;
+mod integrations;
 mod ollama;
 mod state;
 mod system;
@@ -54,6 +55,10 @@ pub fn run() {
             commands::google_calendar_disconnect,
             commands::google_calendar_sync,
             commands::detect_foreground_meeting,
+            commands::share_meeting_note,
+            commands::auto_share_meeting_note,
+            commands::test_integration_connector,
+            commands::build_meeting_export_markdown,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -11,6 +11,7 @@ import { AskMeetingsPanel } from "./components/AskMeetingsPanel";
 import { AssistantHub } from "./components/AssistantHub";
 import { FloatingPane } from "./components/FloatingPane";
 import { OnboardingWizard } from "./components/OnboardingWizard";
+import { ConnectorsPanel } from "./components/ConnectorsPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { TasksPanel } from "./components/TasksPanel";
 import { TrashPanel } from "./components/TrashPanel";
@@ -32,6 +33,7 @@ type View =
   | "tasks"
   | "trash"
   | "settings"
+  | "connectors"
   | "onboarding";
 
 function formatElapsed(ms: number) {
@@ -85,6 +87,13 @@ function App() {
     transcription_model: "gemma4:e4b",
     auto_transcribe_on_stop: true,
     identify_speakers: true,
+    slack_webhook_url: "",
+    slack_auto_post_on_enhance: false,
+    notion_integration_token: "",
+    notion_database_id: "",
+    notion_auto_post_on_enhance: false,
+    zapier_webhook_url: "",
+    zapier_auto_post_on_enhance: false,
   });
 
   const recording = useRecording(effectiveSettings, onSaved);
@@ -173,6 +182,7 @@ function App() {
               ["main", "Notes"],
               ["tasks", "Tasks"],
               ["assistant", "Calendar"],
+              ["connectors", "Connectors"],
               ["settings", "Settings"],
             ] as const
           ).map(([id, label]) => (
@@ -194,6 +204,13 @@ function App() {
             settings={settings}
             onSettingsChange={(s) => void persistSettings(s)}
             onRerunOnboarding={() => setView("onboarding")}
+          />
+        </main>
+      ) : view === "connectors" ? (
+        <main className="page-shell page-shell-wide">
+          <ConnectorsPanel
+            settings={settings}
+            onSettingsChange={(s) => void persistSettings(s)}
           />
         </main>
       ) : view === "ask" ? (
