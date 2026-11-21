@@ -8,7 +8,7 @@
       "outputDirectory": "dist",
       "rewrites": [
         {
-          "source": "/((?!assets/).*)",
+          "source": "/((?!assets/|brand/|favicon\\.svg|favicon\\.png).*)",
           "destination": "/index.html"
         }
       ],
