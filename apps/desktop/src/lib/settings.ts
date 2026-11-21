@@ -26,6 +26,13 @@ export function normalizeSettings(raw: AppSettings): AppSettings {
     google_oauth_client_id: raw.google_oauth_client_id ?? "",
     meeting_popup_enabled: raw.meeting_popup_enabled ?? true,
     identify_speakers: raw.identify_speakers ?? true,
+    slack_webhook_url: raw.slack_webhook_url ?? "",
+    slack_auto_post_on_enhance: raw.slack_auto_post_on_enhance ?? false,
+    notion_integration_token: raw.notion_integration_token ?? "",
+    notion_database_id: raw.notion_database_id ?? "",
+    notion_auto_post_on_enhance: raw.notion_auto_post_on_enhance ?? false,
+    zapier_webhook_url: raw.zapier_webhook_url ?? "",
+    zapier_auto_post_on_enhance: raw.zapier_auto_post_on_enhance ?? false,
   };
 }
 

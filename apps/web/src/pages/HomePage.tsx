@@ -47,6 +47,33 @@ const capabilities = [
   'Ollama on localhost',
 ]
 
+const integrations = [
+  {
+    name: 'Google Calendar',
+    category: 'Meetings',
+    description: 'Upcoming list, pre-meeting prompts, and brief context from past notes.',
+    status: 'Built in',
+  },
+  {
+    name: 'Slack',
+    category: 'Team',
+    description: 'Post summaries to a channel—or auto-post after you enhance notes.',
+    status: 'Desktop',
+  },
+  {
+    name: 'Notion',
+    category: 'Docs',
+    description: 'Export enhanced notes into a database you sort and filter.',
+    status: 'Desktop',
+  },
+  {
+    name: 'Zapier',
+    category: 'Automation',
+    description: 'HubSpot, Attio, Salesforce, Linear—anything in the Granola + Zapier catalog.',
+    status: 'Desktop',
+  },
+]
+
 const privacyPoints = [
   {
     title: 'Audio never uploads',
@@ -68,6 +95,7 @@ export function HomePage() {
       <HeroSection />
       <EthosSection />
       <LifecycleSection />
+      <IntegrationsSection />
       <CapabilitiesSection />
       <PrivacySection />
       <DownloadSection />
@@ -177,6 +205,48 @@ function LifecycleSection() {
         </ol>
       </div>
     </section>
+  )
+}
+
+function IntegrationsSection() {
+  return (
+    <section
+      id="integrations"
+      className="scroll-mt-20 border-b border-[var(--color-ns-border)] py-16 sm:py-20"
+    >
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="ns-kicker">Connectors</p>
+          <h2 className="ns-section-heading mt-2">Share when you choose—not by default</h2>
+          <p className="ns-section-lead mx-auto">
+            Granola ships Slack, Notion, and calendar hooks. NoteStack keeps capture and AI local,
+            then pushes summaries only through connectors you configure on your Mac.
+          </p>
+        </div>
+        <ul className="mt-12 grid gap-4 sm:grid-cols-2">
+          {integrations.map((item) => (
+            <li key={item.name} className="ns-integration-card">
+              <div className="flex items-start justify-between gap-3">
+                <IntegrationHeading item={item} />
+                <span className="ns-integration-pill">{item.status}</span>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--color-ns-text-secondary)]">
+                {item.description}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+function IntegrationHeading({ item }: { item: (typeof integrations)[number] }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold text-[var(--color-ns-accent)]">{item.category}</p>
+      <h3 className="mt-0.5 text-lg font-semibold text-[var(--color-ns-text)]">{item.name}</h3>
+    </div>
   )
 }
 

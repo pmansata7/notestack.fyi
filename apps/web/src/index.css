@@ -393,6 +393,24 @@ body {
   color: var(--color-ns-accent);
 }
 
+.ns-integration-card {
+  border-radius: var(--radius-ns-lg);
+  border: 1px solid var(--color-ns-border);
+  background: var(--color-ns-bg-elevated);
+  padding: 1.35rem 1.5rem;
+}
+
+.ns-integration-pill {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-ns-border);
+  color: var(--color-ns-text-secondary);
+  background: var(--color-ns-chip);
+}
+
 .ns-trust-row {
   display: flex;
   flex-wrap: wrap;

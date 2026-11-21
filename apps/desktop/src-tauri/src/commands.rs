@@ -1,6 +1,7 @@
 use crate::db::{now_iso, Database, Transcript};
-use crate::google_calendar::{
-    self, GoogleCalendarStatus,
+use crate::google_calendar::{self, GoogleCalendarStatus};
+use crate::integrations::{
+    self, auto_share_after_enhance, test_slack, test_zapier, ShareChannel, ShareResult,
 };
 use crate::ollama::{install_ollama, is_ollama_installed, OllamaClient, OllamaInstallStatus};
 use crate::state::{write_data_dir_override, AppSettings, AppState};
@@ -784,4 +785,77 @@ pub fn google_calendar_sync(
 #[tauri::command]
 pub fn detect_foreground_meeting() -> Option<ForegroundMeeting> {
     crate::system::detect_foreground_meeting()
+}
+
+#[tauri::command]
+pub fn share_meeting_note(
+    transcript_id: String,
+    channel: String,
+    state: State<Mutex<AppState>>,
+) -> Result<(), CommandError> {
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let settings = AppSettings::load(&state.db);
+    let t = state
+        .db
+        .get_transcript(&transcript_id)
+        .map_err(map_err)?
+        .ok_or_else(|| command_err("transcript not found"))?;
+    let ch = match channel.to_lowercase().as_str() {
+        "slack" => ShareChannel::Slack,
+        "notion" => ShareChannel::Notion,
+        "zapier" => ShareChannel::Zapier,
+        _ => return Err(command_err("Unknown share channel")),
+    };
+    integrations::share_channel(&settings, ch, &t).map_err(map_err)
+}
+
+#[tauri::command]
+pub fn auto_share_meeting_note(
+    transcript_id: String,
+    state: State<Mutex<AppState>>,
+) -> Result<Vec<ShareResult>, CommandError> {
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let settings = AppSettings::load(&state.db);
+    let t = state
+        .db
+        .get_transcript(&transcript_id)
+        .map_err(map_err)?
+        .ok_or_else(|| command_err("transcript not found"))?;
+    Ok(auto_share_after_enhance(&settings, &t))
+}
+
+#[tauri::command]
+pub fn test_integration_connector(
+    channel: String,
+    state: State<Mutex<AppState>>,
+) -> Result<(), CommandError> {
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let settings = AppSettings::load(&state.db);
+    match channel.to_lowercase().as_str() {
+        "slack" => test_slack(&settings.slack_webhook_url).map_err(map_err),
+        "zapier" => test_zapier(&settings.zapier_webhook_url).map_err(map_err),
+        "notion" => {
+            if settings.notion_integration_token.trim().is_empty()
+                || settings.notion_database_id.trim().is_empty()
+            {
+                return Err(command_err("Notion token and database ID are required"));
+            }
+            Ok(())
+        }
+        _ => Err(command_err("Unknown connector")),
+    }
+}
+
+#[tauri::command]
+pub fn build_meeting_export_markdown(
+    transcript_id: String,
+    state: State<Mutex<AppState>>,
+) -> Result<String, CommandError> {
+    let state = state.lock().map_err(|_| command_err("state lock failed"))?;
+    let t = state
+        .db
+        .get_transcript(&transcript_id)
+        .map_err(map_err)?
+        .ok_or_else(|| command_err("transcript not found"))?;
+    Ok(integrations::meeting_markdown(&t))
 }

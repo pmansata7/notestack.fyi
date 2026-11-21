@@ -7,6 +7,7 @@ import {
   updateTranscript,
 } from "../api";
 import { FormattedTranscript } from "./FormattedTranscript";
+import { ShareMenu, runAutoShareIfConfigured } from "./ShareMenu";
 import { NoteStackMark } from "./NoteStackMark";
 import { hasSpeakerLabels } from "../lib/transcriptText";
 import {
@@ -150,6 +151,13 @@ export function TranscriptDetail({
       setAiAdditions(t.ai_additions);
       onUpdated(t);
       setMessage("Notes enhanced — your text stays black, AI in gray below.");
+      try {
+        await runAutoShareIfConfigured(transcript.id, (shareMsg) =>
+          setMessage(`Notes enhanced. ${shareMsg}`),
+        );
+      } catch {
+        /* optional */
+      }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
     } finally {
@@ -193,12 +201,6 @@ export function TranscriptDetail({
     } finally {
       setBusy(false);
     }
-  };
-
-  const exportMarkdown = () => {
-    const md = `# ${title}\n\n## Instant summary\n${instant}\n\n## Your notes\n${manual}\n\n## AI additions\n${aiAdditions}\n\n## Transcript\n${text}\n`;
-    void navigator.clipboard.writeText(md);
-    setMessage("Copied markdown to clipboard.");
   };
 
   return (
@@ -332,9 +334,12 @@ export function TranscriptDetail({
         <button type="button" className="secondary" onClick={genNotes} disabled={busy}>
           Full AI notes
         </button>
-        <button type="button" className="ghost" onClick={exportMarkdown}>
-          Share (copy MD)
-        </button>
+        <ShareMenu
+          transcript={transcript}
+          settings={settings}
+          onMessage={setMessage}
+          disabled={busy}
+        />
       </div>
       )}
 

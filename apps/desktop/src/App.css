@@ -1,13 +1,13 @@
 :root {
-  font-family: "IBM Plex Sans", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  font-family: "Plus Jakarta Sans", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   color: #18181b;
-  background: #fafaf9;
-  --gemini-blue: #0f766e;
-  --gemini-blue-hover: #0d5f59;
-  --gemini-blue-soft: #ecfdf9;
-  --gemini-bg-soft: #f4f4f5;
-  --gemini-bg-muted: #ececee;
+  background: #f6f4ef;
+  --gemini-blue: #14532d;
+  --gemini-blue-hover: #0f3d22;
+  --gemini-blue-soft: #e8f3ec;
+  --gemini-bg-soft: #f0ebe3;
+  --gemini-bg-muted: #ece8e0;
   --gemini-border: #e4e4e7;
   --gemini-ink: #18181b;
   --gemini-danger: #dc2626;
@@ -1311,4 +1311,217 @@ select:focus {
   .layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* Connectors (Granola-style share destinations) */
+.connectors-shell {
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.connectors-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.connectors-kicker {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--gemini-blue);
+  margin: 0;
+}
+
+.connectors-title {
+  margin: 0.35rem 0 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.connectors-lead {
+  max-width: 34rem;
+  margin-top: 0.5rem;
+  line-height: 1.55;
+}
+
+.connectors-layout {
+  display: grid;
+  grid-template-columns: minmax(11rem, 14rem) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .connectors-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.connectors-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.connectors-tab {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--gemini-ink);
+}
+
+.connectors-tab:hover {
+  background: var(--panel);
+  border-color: var(--gemini-border);
+}
+
+.connectors-tab.active {
+  background: var(--panel);
+  border-color: var(--gemini-border);
+  box-shadow: var(--shadow-soft);
+}
+
+.connectors-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: var(--gemini-bg-muted);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.connectors-tab-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.connectors-tab-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.connectors-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--gemini-border);
+}
+
+.connectors-dot.on {
+  background: var(--gemini-blue);
+}
+
+.connectors-detail h3 {
+  margin-top: 0;
+}
+
+.crm-routing-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.crm-routing-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--gemini-border);
+  border-radius: var(--radius-md);
+  background: var(--gemini-bg-soft);
+}
+
+.mono-wrap {
+  word-break: break-all;
+}
+
+.connectors-status {
+  margin-top: 1rem;
+}
+
+.share-menu {
+  position: relative;
+}
+
+.share-trigger {
+  min-width: 5.5rem;
+}
+
+.share-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.35rem);
+  z-index: 20;
+  min-width: 15.5rem;
+  padding: 0.45rem;
+  border: 1px solid var(--gemini-border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow-elevated);
+}
+
+.share-popover-title {
+  margin: 0.25rem 0.55rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.share-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.share-item:hover:not(:disabled) {
+  background: var(--gemini-bg-soft);
+}
+
+.share-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.share-item strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.share-badge {
+  font-size: 0.68rem;
+  color: var(--muted);
+  white-space: nowrap;
 }
