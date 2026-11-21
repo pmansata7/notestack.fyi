@@ -62,7 +62,10 @@ jobs:
 
   merge-when-ready:
     needs: add-auto-merge-label
-    if: needs.add-auto-merge-label.outputs.merge_requested == 'true'
+    if: >-
+      vars.DEPLOY_PAUSED != 'true' &&
+      needs.add-auto-merge-label.outputs.merge_requested == 'true' &&
+      github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       contents: write

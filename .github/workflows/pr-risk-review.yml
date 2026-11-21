@@ -6,6 +6,10 @@ name: PR risk review
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - '**.md'
+      - '.cursor/**'
+      - 'docs/**'
 
 concurrency:
   group: pr-risk-review-${{ github.event.pull_request.number }}
