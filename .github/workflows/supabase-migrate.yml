@@ -20,6 +20,7 @@ on:
 
 jobs:
   migrate:
+    if: vars.DEPLOY_PAUSED != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

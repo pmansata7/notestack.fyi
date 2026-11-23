@@ -12,6 +12,10 @@ on:
       - 'apps/web/package-lock.json'
       - '.github/workflows/web-ci.yml'
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
