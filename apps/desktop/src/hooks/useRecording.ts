@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import {
   createTranscript,
+  autoShareMeetingNote,
   enhanceNotes,
   generateInstantSummary,
   saveRecordingAudio,
@@ -223,6 +224,11 @@ export function useRecording(
       if (s.auto_enhance_on_stop && (finalText || updated.manual_notes.trim())) {
         try {
           updated = await enhanceNotes(transcriptId, s.default_model);
+          try {
+            await autoShareMeetingNote(transcriptId);
+          } catch {
+            /* optional */
+          }
         } catch {
           /* optional */
         }

@@ -29,21 +29,18 @@ export function DownloadButton({ className = '', size = 'default' }: DownloadBut
     )
   }
 
+  const label = loading ? 'Checking download…' : 'Get the Mac app'
   return (
     <a
       href="#download"
       role="button"
-      aria-label={loading ? 'Checking download availability' : 'Download NoteStack for Mac (coming soon)'}
+      aria-label={loading ? 'Checking download availability' : 'Download NoteStack for Mac'}
       aria-busy={loading}
-      title={loading ? 'Checking for release…' : 'macOS .dmg download coming soon'}
-      onClick={(e) => e.preventDefault()}
-      className={`ns-btn-primary ${sizeClasses} ${className} ${loading ? 'opacity-80' : ''}`}
+      title={loading ? 'Checking for the latest release' : 'Scroll to download'}
+      className={`ns-btn-primary ${sizeClasses} ${className} ${loading ? 'opacity-90' : ''}`}
     >
       <AppleIcon />
-      Download for Mac
-      <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">
-        {loading ? '…' : 'Soon'}
-      </span>
+      {label}
     </a>
   )
 }

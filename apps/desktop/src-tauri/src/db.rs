@@ -1,3 +1,4 @@
+use crate::legacy_paths::LEGACY_DB_FILENAME;
 use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
@@ -42,7 +43,7 @@ impl Database {
         std::fs::create_dir_all(data_dir.join("recordings"))?;
         let db_path = data_dir.join("notestack.db");
         if !db_path.exists() {
-            let legacy_db = data_dir.join("record-plus.db");
+            let legacy_db = data_dir.join(LEGACY_DB_FILENAME);
             if legacy_db.is_file() {
                 let _ = std::fs::rename(&legacy_db, &db_path);
             }

@@ -16,14 +16,14 @@ export function Header() {
           to="/"
           className="flex min-w-0 items-center gap-2.5 rounded-lg outline-offset-4 focus-visible:outline-2 focus-visible:outline-[var(--color-ns-accent)]"
         >
-          <NoteStackLogo height={28} className="h-7 w-auto max-w-[min(100%,11rem)]" />
+          <NoteStackLogo height={28} className="max-w-[min(100%,12rem)]" />
         </Link>
         <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <a href="/#features" className="ns-nav-link hidden sm:inline">
-            Features
+            Product
           </a>
           <a href="/#how-it-works" className="ns-nav-link hidden sm:inline">
-            How it works
+            Flow
           </a>
           <NavLink to="/privacy" className={navLinkClass}>
             Privacy

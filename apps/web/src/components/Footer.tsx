@@ -6,7 +6,7 @@ type FooterLink =
   | { label: string; to: string }
 
 const footerLinks: FooterLink[] = [
-  { label: 'Features', href: '/#features' },
+  { label: 'Product', href: '/#features' },
   { label: 'How it works', href: '/#how-it-works' },
   { label: 'Download', href: '/#download' },
   { label: 'Privacy Policy', to: '/privacy' },
@@ -22,7 +22,8 @@ export function Footer() {
             <div>
               <p className="font-semibold text-[var(--color-ns-text)]">NoteStack</p>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-ns-text-muted)]">
-                Local AI meeting notes. Your audio stays on your Mac—transcribed and summarized with Ollama.
+                Private AI notepad for meetings—brief, capture, enhance, and ask with everything kept on
+                your Mac.
               </p>
             </div>
           </div>

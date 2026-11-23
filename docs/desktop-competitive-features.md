@@ -19,7 +19,7 @@ NoteStack implements local-first equivalents of major desktop capabilities from 
 | Fireflies Talk dictation | **Settings → Dictation** (clipboard on release) |
 | Trash / restore | **Trash** view |
 | Search meetings | Sidebar search |
-| Integrations (Slack, CRM) | **Share (copy MD)** — no OAuth yet |
+| Integrations (Slack, CRM) | **Connectors** — Slack webhook, Notion DB, Zapier (HubSpot/Attio via Zap), **Share** menu + auto-post on enhance |
 
 ## Granola Desktop
 

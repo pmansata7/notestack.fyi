@@ -44,6 +44,20 @@ pub struct AppSettings {
     pub meeting_popup_enabled: bool,
     /// Label speaker turns after final transcription (LLM formatting).
     pub identify_speakers: bool,
+    #[serde(default)]
+    pub slack_webhook_url: String,
+    #[serde(default)]
+    pub slack_auto_post_on_enhance: bool,
+    #[serde(default)]
+    pub notion_integration_token: String,
+    #[serde(default)]
+    pub notion_database_id: String,
+    #[serde(default)]
+    pub notion_auto_post_on_enhance: bool,
+    #[serde(default)]
+    pub zapier_webhook_url: String,
+    #[serde(default)]
+    pub zapier_auto_post_on_enhance: bool,
 }
 
 impl Default for AppSettings {
@@ -65,6 +79,13 @@ impl Default for AppSettings {
             google_oauth_client_id: String::new(),
             meeting_popup_enabled: true,
             identify_speakers: true,
+            slack_webhook_url: String::new(),
+            slack_auto_post_on_enhance: false,
+            notion_integration_token: String::new(),
+            notion_database_id: String::new(),
+            notion_auto_post_on_enhance: false,
+            zapier_webhook_url: String::new(),
+            zapier_auto_post_on_enhance: false,
         }
     }
 }
@@ -86,6 +107,13 @@ impl AppSettings {
     pub const GOOGLE_CLIENT_ID_KEY: &'static str = "google_oauth_client_id";
     pub const MEETING_POPUP_KEY: &'static str = "meeting_popup_enabled";
     pub const IDENTIFY_SPEAKERS_KEY: &'static str = "identify_speakers";
+    pub const SLACK_WEBHOOK_KEY: &'static str = "slack_webhook_url";
+    pub const SLACK_AUTO_KEY: &'static str = "slack_auto_post_on_enhance";
+    pub const NOTION_TOKEN_KEY: &'static str = "notion_integration_token";
+    pub const NOTION_DB_KEY: &'static str = "notion_database_id";
+    pub const NOTION_AUTO_KEY: &'static str = "notion_auto_post_on_enhance";
+    pub const ZAPIER_WEBHOOK_KEY: &'static str = "zapier_webhook_url";
+    pub const ZAPIER_AUTO_KEY: &'static str = "zapier_auto_post_on_enhance";
 
     pub fn load(db: &Database) -> Self {
         let mut s = AppSettings::default();
@@ -146,6 +174,27 @@ impl AppSettings {
         }
         if let Ok(Some(v)) = db.get_setting(Self::IDENTIFY_SPEAKERS_KEY) {
             s.identify_speakers = v == "true";
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::SLACK_WEBHOOK_KEY) {
+            s.slack_webhook_url = v;
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::SLACK_AUTO_KEY) {
+            s.slack_auto_post_on_enhance = v == "true";
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::NOTION_TOKEN_KEY) {
+            s.notion_integration_token = v;
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::NOTION_DB_KEY) {
+            s.notion_database_id = v;
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::NOTION_AUTO_KEY) {
+            s.notion_auto_post_on_enhance = v == "true";
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::ZAPIER_WEBHOOK_KEY) {
+            s.zapier_webhook_url = v;
+        }
+        if let Ok(Some(v)) = db.get_setting(Self::ZAPIER_AUTO_KEY) {
+            s.zapier_auto_post_on_enhance = v == "true";
         }
         s
     }
@@ -230,12 +279,41 @@ impl AppSettings {
                 "false"
             },
         )?;
+        db.set_setting(Self::SLACK_WEBHOOK_KEY, &self.slack_webhook_url)?;
+        db.set_setting(
+            Self::SLACK_AUTO_KEY,
+            if self.slack_auto_post_on_enhance {
+                "true"
+            } else {
+                "false"
+            },
+        )?;
+        db.set_setting(Self::NOTION_TOKEN_KEY, &self.notion_integration_token)?;
+        db.set_setting(Self::NOTION_DB_KEY, &self.notion_database_id)?;
+        db.set_setting(
+            Self::NOTION_AUTO_KEY,
+            if self.notion_auto_post_on_enhance {
+                "true"
+            } else {
+                "false"
+            },
+        )?;
+        db.set_setting(Self::ZAPIER_WEBHOOK_KEY, &self.zapier_webhook_url)?;
+        db.set_setting(
+            Self::ZAPIER_AUTO_KEY,
+            if self.zapier_auto_post_on_enhance {
+                "true"
+            } else {
+                "false"
+            },
+        )?;
         Ok(())
     }
 }
 
+use crate::legacy_paths::LEGACY_MAC_APP_SUPPORT_DIR;
+
 const APP_DATA_DIR_NAME: &str = "NoteStack";
-const LEGACY_APP_DATA_DIR_NAME: &str = "Record Plus";
 const BOOTSTRAP_FILE: &str = "bootstrap.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -247,7 +325,7 @@ struct BootstrapConfig {
 pub fn bootstrap_dir() -> PathBuf {
     if let Some(parent) = dirs_data_local() {
         let new_dir = parent.join(APP_DATA_DIR_NAME);
-        let legacy_dir = parent.join(LEGACY_APP_DATA_DIR_NAME);
+        let legacy_dir = parent.join(LEGACY_MAC_APP_SUPPORT_DIR);
         if !new_dir.exists() && legacy_dir.is_dir() {
             let _ = fs::rename(&legacy_dir, &new_dir);
         }
